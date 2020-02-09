@@ -77,4 +77,4 @@ Les coordonnées ont besoin d'avoir un traitement afin de ramner le centre de l'
 
         ( X_sky_3D, Y_sky_3D, Z_sky_3D ) = ( X_ground_2D, Y_ground_2D, D )
         ```
-
+![Schéma translation]()
