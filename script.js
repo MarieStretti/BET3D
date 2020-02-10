@@ -6,6 +6,9 @@ const HALF_HEIGHT = 256.5;	// Half height of image
 
 const TRANS_MAT = [ 651222.0, 6861323.5 ]	// Coordinate of the image center : translation matrix
 
+const SKY_EDGES_PATH = "edges/sky_edges.json";
+const GROUND_EDGES_PATH = "edges/ground_edges.json";
+
 /* Definition of our variables */
 var camera, scene, renderer;
 var geometry, material, plane;
@@ -13,27 +16,54 @@ var rotationSpeed = 0.01;
 
 
 
-
+/* Load Texture and GeoJSON */
 var texture = new THREE.TextureLoader().load("./images/turgot_map_crop2.jpeg");
+var sky_edges, ground_edges; 
 
-// "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b9/Turgot_map_of_Paris_-_Norman_B._Leventhal_Map_Center.jpg/1024px-Turgot_map_of_Paris_-_Norman_B._Leventhal_Map_Center.jpg"
+// new THREE.ObjectLoader().load(SKY_EDGES_PATH, (obj_json) => {
+// 	sky_edges = obj_json;
+// });
+// new THREE.ObjectLoader().load(GROUND_EDGES_PATH, (obj_json) => {
+// 	ground_edges = obj_json;
+// });
 
-/* */
+
+let skyPromise = fetch(SKY_EDGES_PATH).then (result => result.json());
+let groundPromise = fetch(GROUND_EDGES_PATH).then (result => result.json());
+let promises = [skyPromise, groundPromise]
+
+Promise.all(promises)
+	.then(promises => {
+		sky_edges = promises[0];
+		ground_edges = promises[1];
+
+		console.log(sky_edges);
+		console.log(ground_edges);
+
+		console.log(sky_edges.features.length == ground_edges.features.length);
+
+		drawEdges();
+	})
+
+
+/* Running */
 init();
 animate();
 
-/**
- * 
- */
+
+/* FUNCTIONS */ 
+
 function init() {
 	camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.01, 1000);
-	camera.position.z = 800;
+	camera.position.z = 700;
 
 	scene = new THREE.Scene();
 
 	// create a simple square shape. We duplicate the top left and bottom right
 	var geometry = new THREE.BufferGeometry();
-	// vertices because each vertex needs to appear once per triangle.
+
+	/* Initialisation of vertices and uv with bounding box */
+	// Vertices because each vertex needs to appear once per triangle.
 	var vertices = new Float32Array([
 		-HALF_WIDTH, -HALF_HEIGHT, 0.0, //-1.0, -1.0, 0.0,	
 		 HALF_WIDTH, -HALF_HEIGHT, 0.0, // 1.0, -1.0, 0.0,
@@ -43,6 +73,7 @@ function init() {
 		-HALF_WIDTH,  HALF_HEIGHT, 0.0, //-1.0,  1.0, 0.0,
 		-HALF_WIDTH, -HALF_HEIGHT, 0.0 //-1.0, -1.0, 0.0
 	]);
+
 	var uv = new Float32Array([
 		0.0, 0.0,
 		1.0, 0.0,
@@ -53,10 +84,11 @@ function init() {
 		0.0, 0.0
 	]);
 
+
 	// itemSize = 3 because there are 3 values (components) per vertex
 	geometry.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
 	geometry.setAttribute('uv', new THREE.BufferAttribute(uv, 2));
-	console.log(geometry);
+	// console.log(geometry);
 	
 	material = new THREE.MeshBasicMaterial({ transparent: true, color: 0xFFFFFF, map: texture });
 
@@ -106,3 +138,48 @@ window.onload = function () {
 	gui.add(text, 'displayOutline');
 	gui.add(text, 'explode');
 };
+
+
+
+
+
+
+
+
+function drawEdges() {
+
+	for (i=0; i<sky_edges.features.length; i++) {
+		let sky_edge = sky_edges.features[i].geometry.coordinates[0];
+
+		var materialSky = new THREE.LineBasicMaterial({
+			color: 0xff0000
+		});
+		
+		var geometrySky = new THREE.Geometry();
+		geometrySky.vertices.push(
+			new THREE.Vector3( sky_edge[0][0] - TRANS_MAT[0], sky_edge[0][1] - TRANS_MAT[1], 5 ),
+			new THREE.Vector3( sky_edge[1][0] - TRANS_MAT[0], sky_edge[1][1] - TRANS_MAT[1], 5 )
+		);
+		
+		var lineSky = new THREE.Line( geometrySky, materialSky );
+		scene.add( lineSky ); 
+
+
+
+		let ground_edge = ground_edges.features[i].geometry.coordinates[0];
+
+		var materialGround = new THREE.LineBasicMaterial({
+			color: 0x0000ff
+		});
+		
+		var geometryGround = new THREE.Geometry();
+		geometryGround.vertices.push(
+			new THREE.Vector3( ground_edge[0][0] - TRANS_MAT[0], ground_edge[0][1] - TRANS_MAT[1], 5 ),
+			new THREE.Vector3( ground_edge[1][0] - TRANS_MAT[0], ground_edge[1][1] - TRANS_MAT[1], 5 )
+		);
+		
+		var lineGround = new THREE.Line( geometryGround, materialGround );
+		scene.add( lineGround ); 
+	}
+
+}
