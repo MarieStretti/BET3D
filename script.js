@@ -11,8 +11,9 @@ const GROUND_EDGES_PATH = "edges/ground_edges.json";
 
 /* Definition of our variables */
 var camera, scene, renderer, controls;
-var geometry, material, plane;
+var geometry, material, plane, polygons;
 var rotationSpeed = 0.01;
+let z_offset = 3;
 
 
 /* Load Texture and GeoJSON */
@@ -35,6 +36,7 @@ Promise.all(promises)
 		console.log(sky_edges.features.length == ground_edges.features.length);
 
 		drawEdges();
+		drawPolygons();
 	})
 
 
@@ -175,12 +177,12 @@ function computeCoordinates() {
 
 		// Calculate 3D coordinate
 		let ground_edge_3D = [ 
-			[ ground_edge_2D[0][0], ground_edge_2D[0][1], 5 ], // Z à 0
-			[ ground_edge_2D[1][0], ground_edge_2D[1][1], 5 ]
+			[ ground_edge_2D[0][0], ground_edge_2D[0][1], z_offset ], // Z à 0
+			[ ground_edge_2D[1][0], ground_edge_2D[1][1], z_offset ]
 		]
 		let sky_edge_3D = [ 
-			[ ground_edge_2D[0][0], ground_edge_2D[0][1], z[0] ],
-			[ ground_edge_2D[1][0], ground_edge_2D[1][1], z[1] ]
+			[ ground_edge_2D[0][0], ground_edge_2D[0][1], z_offset + z[0] ],
+			[ ground_edge_2D[1][0], ground_edge_2D[1][1], z_offset + z[1] ]
 		]
 
 		ground_coord_3D.push(ground_edge_3D);
@@ -239,43 +241,80 @@ function drawEdges() {
 
 
 function drawPolygons() {
+	// Get 3D coordinates
 	let [ground_coord_3D, sky_coord_3D] = computeCoordinates();
 
 	// create a simple square shape. We duplicate the top left and bottom right
-	var polygons = new THREE.BufferGeometry();
+	var polygonsGeometry = new THREE.BufferGeometry();
 
-	/* Initialisation of vertices and uv with bounding box */
-	// Vertices because each vertex needs to appear once per triangle.
-	var vertices = new Float32Array([
-		-HALF_WIDTH, -HALF_HEIGHT, 0.0, //-1.0, -1.0, 0.0,	
-		 HALF_WIDTH, -HALF_HEIGHT, 0.0, // 1.0, -1.0, 0.0,
-		 HALF_WIDTH,  HALF_HEIGHT, 0.0, // 1.0,  1.0, 0.0,
+	// *2 => 1 edge = 6 points for 2 triangles
+	// *3 => 1 point = 3 coordinates (X, Y, Z)
+	let nb_vertices = (ground_coord_3D.length + sky_coord_3D.length) * 6 * 3
+	/* Initialisation of vertices and uv */
+	var vertices = new Float32Array( nb_vertices );
+	var uv = new Float32Array( nb_vertices );
 
-		 HALF_WIDTH,  HALF_HEIGHT, 0.0, // 1.0,  1.0, 0.0,
-		-HALF_WIDTH,  HALF_HEIGHT, 0.0, //-1.0,  1.0, 0.0,
-		-HALF_WIDTH, -HALF_HEIGHT, 0.0 //-1.0, -1.0, 0.0
-	]);
+	/* Fill array */
+	let i_vertices = 0;
+	for (i=0; i<ground_coord_3D.length; i++) {
+		let [ground1, ground2] = ground_coord_3D[i];
+		let [sky1, sky2] = sky_coord_3D[i];
 
-	var uv = new Float32Array([
-		0.0, 0.0,
-		1.0, 0.0,
-		1.0, 1.0,
+		vertices[i_vertices] = ground1[0]
+		i_vertices++;
+		vertices[i_vertices] = ground1[1]
+		i_vertices++;
+		vertices[i_vertices] = ground1[2]
+		i_vertices++;
+		vertices[i_vertices] = ground2[0]
+		i_vertices++;
+		vertices[i_vertices] = ground2[1]
+		i_vertices++;
+		vertices[i_vertices] = ground2[2]
+		i_vertices++;
+		vertices[i_vertices] = sky2[0]
+		i_vertices++;
+		vertices[i_vertices] = sky2[1]
+		i_vertices++;
+		vertices[i_vertices] = sky2[2]					//	  |			   /	  |
+																			//	  |			 /		  |
+		
+		i_vertices++;
+		vertices[i_vertices] = sky2[0]
+		i_vertices++;
+		vertices[i_vertices] = sky2[1]
+		i_vertices++;
+		vertices[i_vertices] = sky2[2]
+		i_vertices++;
+		vertices[i_vertices] = sky1[0]
+		i_vertices++;
+		vertices[i_vertices] = sky1[1]
+		i_vertices++;
+		vertices[i_vertices] = sky1[2]
+		i_vertices++;
+		vertices[i_vertices] = ground1[0]
+		i_vertices++;
+		vertices[i_vertices] = ground1[1]
+		i_vertices++;
+		vertices[i_vertices] = ground1[2]
+		i_vertices++;			//	ground1 ----------- ground2
 
-		1.0, 1.0,
-		0.0, 1.0,
-		0.0, 0.0
-	]);
-
+		//i_vertices += 6 * 3; // 6 points added with each 3 coords
+	}
+	
+	console.log(vertices)
 
 	// itemSize = 3 because there are 3 values (components) per vertex
-	geometry.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
-	geometry.setAttribute('uv', new THREE.BufferAttribute(uv, 2));
+	polygonsGeometry.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
+	// geometry.setAttribute('uv', new THREE.BufferAttribute(uv, 2));
 	// console.log(geometry);
 	
-	material = new THREE.MeshBasicMaterial({ transparent: true, color: 0xFFFFFF, map: texture });
+	let polygonsMaterial = new THREE.MeshBasicMaterial({ transparent: true, color: 0xFFFFFF, side: THREE.DoubleSide}) //, map: texture });
 
-	plane = new THREE.Mesh(geometry, material);
-	scene.add(plane);
+	polygons = new THREE.Mesh(polygonsGeometry, polygonsMaterial);
+	scene.add(polygons);
+
+	console.log(polygons)
 }
 
 
