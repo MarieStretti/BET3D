@@ -10,22 +10,14 @@ const SKY_EDGES_PATH = "edges/sky_edges.json";
 const GROUND_EDGES_PATH = "edges/ground_edges.json";
 
 /* Definition of our variables */
-var camera, scene, renderer;
+var camera, scene, renderer, controls;
 var geometry, material, plane;
 var rotationSpeed = 0.01;
-
 
 
 /* Load Texture and GeoJSON */
 var texture = new THREE.TextureLoader().load("./images/turgot_map_crop2.jpeg");
 var sky_edges, ground_edges; 
-
-// new THREE.ObjectLoader().load(SKY_EDGES_PATH, (obj_json) => {
-// 	sky_edges = obj_json;
-// });
-// new THREE.ObjectLoader().load(GROUND_EDGES_PATH, (obj_json) => {
-// 	ground_edges = obj_json;
-// });
 
 
 let skyPromise = fetch(SKY_EDGES_PATH).then (result => result.json());
@@ -58,6 +50,8 @@ function init() {
 	camera.position.z = 700;
 
 	scene = new THREE.Scene();
+
+	
 
 	// create a simple square shape. We duplicate the top left and bottom right
 	var geometry = new THREE.BufferGeometry();
@@ -100,6 +94,8 @@ function init() {
 	renderer.setSize(window.innerWidth, window.innerHeight);
 	document.body.appendChild(renderer.domElement);
 
+	controls = new THREE.OrbitControls(camera, renderer.domElement);
+
 }
 
 /**
@@ -107,6 +103,8 @@ function init() {
  */
 function animate() {
 	requestAnimationFrame(animate);
+
+	controls.update();
 
 	renderer.render(scene, camera);
 }
@@ -149,17 +147,20 @@ window.onload = function () {
 function drawEdges() {
 
 	for (i=0; i<sky_edges.features.length; i++) {
-		// Get 2D coordinates
-		let ground_edge_2D = ground_edges.features[i].geometry.coordinates[0];
-		let sky_edge_2D = sky_edges.features[i].geometry.coordinates[0];
+		// Get Lambert coordinates
+		let ground_edge_Lambert = ground_edges.features[i].geometry.coordinates[0];
+		let sky_edge_Lambert = sky_edges.features[i].geometry.coordinates[0];
+		
+		// Calcul 2D coordinates
+		let ground_edge_2D = [ 
+			[ ground_edge_Lambert[0][0] - TRANS_MAT[0], ground_edge_Lambert[0][1] - TRANS_MAT[1], 0 ], // Z à 0
+			[ ground_edge_Lambert[1][0] - TRANS_MAT[0], ground_edge_Lambert[1][1] - TRANS_MAT[1], 0 ]
+		]
+		let sky_edge_2D = [ 
+			[ sky_edge_Lambert[0][0] - TRANS_MAT[0], sky_edge_Lambert[0][1] - TRANS_MAT[1], 0 ],
+			[ sky_edge_Lambert[1][0] - TRANS_MAT[0], sky_edge_Lambert[1][1] - TRANS_MAT[1], 0 ]
+		]
 
-		// Create Materials with color (with texture)
-		var materialGround = new THREE.LineBasicMaterial({
-			color: 0xff0000
-		});
-		var materialSky = new THREE.LineBasicMaterial({
-			color: 0x0000ff
-		});
 
 		// Compute distance: Z for the points couple (both extremities of edge)
 		let z = [
@@ -169,12 +170,12 @@ function drawEdges() {
 
 		// Calculate 3D coordinate
 		let ground_edge_3D = [ 
-			[ ground_edge_2D[0][0] - TRANS_MAT[0], ground_edge_2D[0][1] - TRANS_MAT[1], 5 ], // Z à 0
-			[ ground_edge_2D[1][0] - TRANS_MAT[0], ground_edge_2D[1][1] - TRANS_MAT[1], 5]
+			[ ground_edge_2D[0][0], ground_edge_2D[0][1], 5 ], // Z à 0
+			[ ground_edge_2D[1][0], ground_edge_2D[1][1], 5 ]
 		]
 		let sky_edge_3D = [ 
-			[ sky_edge_2D[0][0] - TRANS_MAT[0], sky_edge_2D[0][1] - TRANS_MAT[1], z[0] ],
-			[ sky_edge_2D[1][0] - TRANS_MAT[0], sky_edge_2D[1][1] - TRANS_MAT[1], z[1] ]
+			[ ground_edge_2D[0][0], ground_edge_2D[0][1], z[0] ],
+			[ ground_edge_2D[1][0], ground_edge_2D[1][1], z[1] ]
 		]
 
 
@@ -189,6 +190,15 @@ function drawEdges() {
 			new THREE.Vector3( sky_edge_3D[0][0], sky_edge_3D[0][1], sky_edge_3D[0][2] ),
 			new THREE.Vector3( sky_edge_3D[1][0], sky_edge_3D[1][1], sky_edge_3D[1][2] )
 		);
+
+
+		// Create Materials with color (with texture)
+		var materialGround = new THREE.LineBasicMaterial({
+			color: 0xff0000
+		});
+		var materialSky = new THREE.LineBasicMaterial({
+			color: 0x0000ff
+		});
 		
 
 		// Draw lines
