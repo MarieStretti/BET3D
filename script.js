@@ -51,44 +51,7 @@ function init() {
 
 	scene = new THREE.Scene();
 
-	
-
-	// create a simple square shape. We duplicate the top left and bottom right
-	var geometry = new THREE.BufferGeometry();
-
-	/* Initialisation of vertices and uv with bounding box */
-	// Vertices because each vertex needs to appear once per triangle.
-	var vertices = new Float32Array([
-		-HALF_WIDTH, -HALF_HEIGHT, 0.0, //-1.0, -1.0, 0.0,	
-		 HALF_WIDTH, -HALF_HEIGHT, 0.0, // 1.0, -1.0, 0.0,
-		 HALF_WIDTH,  HALF_HEIGHT, 0.0, // 1.0,  1.0, 0.0,
-
-		 HALF_WIDTH,  HALF_HEIGHT, 0.0, // 1.0,  1.0, 0.0,
-		-HALF_WIDTH,  HALF_HEIGHT, 0.0, //-1.0,  1.0, 0.0,
-		-HALF_WIDTH, -HALF_HEIGHT, 0.0 //-1.0, -1.0, 0.0
-	]);
-
-	var uv = new Float32Array([
-		0.0, 0.0,
-		1.0, 0.0,
-		1.0, 1.0,
-
-		1.0, 1.0,
-		0.0, 1.0,
-		0.0, 0.0
-	]);
-
-
-	// itemSize = 3 because there are 3 values (components) per vertex
-	geometry.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
-	geometry.setAttribute('uv', new THREE.BufferAttribute(uv, 2));
-	// console.log(geometry);
-	
-	material = new THREE.MeshBasicMaterial({ transparent: true, color: 0xFFFFFF, map: texture });
-
-	plane = new THREE.Mesh(geometry, material);
-	scene.add(plane);
-
+	drawMap();
 
 	renderer = new THREE.WebGLRenderer({ antialias: true });
 	renderer.setSize(window.innerWidth, window.innerHeight);
@@ -139,14 +102,56 @@ window.onload = function () {
 
 
 
+/**
+ * Draw only the map in 2D
+ */
+function drawMap() {
+	// create a simple square shape. We duplicate the top left and bottom right
+	var geometry = new THREE.BufferGeometry();
+
+	/* Initialisation of vertices and uv with bounding box */
+	// Vertices because each vertex needs to appear once per triangle.
+	var vertices = new Float32Array([
+		-HALF_WIDTH, -HALF_HEIGHT, 0.0, //-1.0, -1.0, 0.0,	
+		 HALF_WIDTH, -HALF_HEIGHT, 0.0, // 1.0, -1.0, 0.0,
+		 HALF_WIDTH,  HALF_HEIGHT, 0.0, // 1.0,  1.0, 0.0,
+
+		 HALF_WIDTH,  HALF_HEIGHT, 0.0, // 1.0,  1.0, 0.0,
+		-HALF_WIDTH,  HALF_HEIGHT, 0.0, //-1.0,  1.0, 0.0,
+		-HALF_WIDTH, -HALF_HEIGHT, 0.0 //-1.0, -1.0, 0.0
+	]);
+
+	var uv = new Float32Array([
+		0.0, 0.0,
+		1.0, 0.0,
+		1.0, 1.0,
+
+		1.0, 1.0,
+		0.0, 1.0,
+		0.0, 0.0
+	]);
 
 
+	// itemSize = 3 because there are 3 values (components) per vertex
+	geometry.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
+	geometry.setAttribute('uv', new THREE.BufferAttribute(uv, 2));
+	// console.log(geometry);
+	
+	material = new THREE.MeshBasicMaterial({ transparent: true, color: 0xFFFFFF, map: texture });
 
+	plane = new THREE.Mesh(geometry, material);
+	scene.add(plane);
+}
 
+/**
+ * Compute the coordinates for ground and sky (edges by edges)
+ * @returns {[[[[float]]]]} [ ground_coord_3D, sky_coord_3D ]
+ */
+function computeCoordinates() {
+	let ground_coord_3D = [];
+	let sky_coord_3D = [];
 
-function drawEdges() {
-
-	for (i=0; i<sky_edges.features.length; i++) {
+	for (i=0; i< sky_edges.features.length; i++) {
 		// Get Lambert coordinates
 		let ground_edge_Lambert = ground_edges.features[i].geometry.coordinates[0];
 		let sky_edge_Lambert = sky_edges.features[i].geometry.coordinates[0];
@@ -178,6 +183,26 @@ function drawEdges() {
 			[ ground_edge_2D[1][0], ground_edge_2D[1][1], z[1] ]
 		]
 
+		ground_coord_3D.push(ground_edge_3D);
+		sky_coord_3D.push(sky_edge_3D);
+
+	}
+
+	return [ground_coord_3D, sky_coord_3D]
+}
+
+
+/**
+ * Draw only the edges: ie sky and ground separately
+ * @returns 2 geometries
+ */
+function drawEdges() {
+	let [ground_coord_3D, sky_coord_3D] = computeCoordinates();
+
+	for (i=0; i<ground_coord_3D.length; i++) {
+
+		let ground_edge_3D = ground_coord_3D[i];
+		let sky_edge_3D = sky_coord_3D[i];
 
 		// Create geometries
 		var geometryGround = new THREE.Geometry();
@@ -211,3 +236,46 @@ function drawEdges() {
 	}
 
 }
+
+
+function drawPolygons() {
+	let [ground_coord_3D, sky_coord_3D] = computeCoordinates();
+
+	// create a simple square shape. We duplicate the top left and bottom right
+	var polygons = new THREE.BufferGeometry();
+
+	/* Initialisation of vertices and uv with bounding box */
+	// Vertices because each vertex needs to appear once per triangle.
+	var vertices = new Float32Array([
+		-HALF_WIDTH, -HALF_HEIGHT, 0.0, //-1.0, -1.0, 0.0,	
+		 HALF_WIDTH, -HALF_HEIGHT, 0.0, // 1.0, -1.0, 0.0,
+		 HALF_WIDTH,  HALF_HEIGHT, 0.0, // 1.0,  1.0, 0.0,
+
+		 HALF_WIDTH,  HALF_HEIGHT, 0.0, // 1.0,  1.0, 0.0,
+		-HALF_WIDTH,  HALF_HEIGHT, 0.0, //-1.0,  1.0, 0.0,
+		-HALF_WIDTH, -HALF_HEIGHT, 0.0 //-1.0, -1.0, 0.0
+	]);
+
+	var uv = new Float32Array([
+		0.0, 0.0,
+		1.0, 0.0,
+		1.0, 1.0,
+
+		1.0, 1.0,
+		0.0, 1.0,
+		0.0, 0.0
+	]);
+
+
+	// itemSize = 3 because there are 3 values (components) per vertex
+	geometry.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
+	geometry.setAttribute('uv', new THREE.BufferAttribute(uv, 2));
+	// console.log(geometry);
+	
+	material = new THREE.MeshBasicMaterial({ transparent: true, color: 0xFFFFFF, map: texture });
+
+	plane = new THREE.Mesh(geometry, material);
+	scene.add(plane);
+}
+
+
