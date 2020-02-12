@@ -149,36 +149,54 @@ window.onload = function () {
 function drawEdges() {
 
 	for (i=0; i<sky_edges.features.length; i++) {
-		let sky_edge = sky_edges.features[i].geometry.coordinates[0];
+		// Get 2D coordinates
+		let ground_edge_2D = ground_edges.features[i].geometry.coordinates[0];
+		let sky_edge_2D = sky_edges.features[i].geometry.coordinates[0];
 
-		var materialSky = new THREE.LineBasicMaterial({
+		// Create Materials with color (with texture)
+		var materialGround = new THREE.LineBasicMaterial({
 			color: 0xff0000
 		});
-		
-		var geometrySky = new THREE.Geometry();
-		geometrySky.vertices.push(
-			new THREE.Vector3( sky_edge[0][0] - TRANS_MAT[0], sky_edge[0][1] - TRANS_MAT[1], 5 ),
-			new THREE.Vector3( sky_edge[1][0] - TRANS_MAT[0], sky_edge[1][1] - TRANS_MAT[1], 5 )
-		);
-		
-		var lineSky = new THREE.Line( geometrySky, materialSky );
-		scene.add( lineSky ); 
-
-
-
-		let ground_edge = ground_edges.features[i].geometry.coordinates[0];
-
-		var materialGround = new THREE.LineBasicMaterial({
+		var materialSky = new THREE.LineBasicMaterial({
 			color: 0x0000ff
 		});
-		
+
+		// Compute distance: Z for the points couple (both extremities of edge)
+		let z = [
+			Math.sqrt( ( ground_edge_2D[0][0] - sky_edge_2D[0][0])**2 +  (ground_edge_2D[0][1] - sky_edge_2D[0][1])**2 ),
+			Math.sqrt( ( ground_edge_2D[1][0] - sky_edge_2D[1][0])**2 +  (ground_edge_2D[1][1] - sky_edge_2D[1][1])**2 )
+		]
+
+		// Calculate 3D coordinate
+		let ground_edge_3D = [ 
+			[ ground_edge_2D[0][0] - TRANS_MAT[0], ground_edge_2D[0][1] - TRANS_MAT[1], 5 ], // Z à 0
+			[ ground_edge_2D[1][0] - TRANS_MAT[0], ground_edge_2D[1][1] - TRANS_MAT[1], 5]
+		]
+		let sky_edge_3D = [ 
+			[ sky_edge_2D[0][0] - TRANS_MAT[0], sky_edge_2D[0][1] - TRANS_MAT[1], z[0] ],
+			[ sky_edge_2D[1][0] - TRANS_MAT[0], sky_edge_2D[1][1] - TRANS_MAT[1], z[1] ]
+		]
+
+
+		// Create geometries
 		var geometryGround = new THREE.Geometry();
 		geometryGround.vertices.push(
-			new THREE.Vector3( ground_edge[0][0] - TRANS_MAT[0], ground_edge[0][1] - TRANS_MAT[1], 5 ),
-			new THREE.Vector3( ground_edge[1][0] - TRANS_MAT[0], ground_edge[1][1] - TRANS_MAT[1], 5 )
+			new THREE.Vector3( ground_edge_3D[0][0], ground_edge_3D[0][1], ground_edge_3D[0][2] ),
+			new THREE.Vector3( ground_edge_3D[1][0], ground_edge_3D[1][1], ground_edge_3D[1][2] )
+		);
+		var geometrySky = new THREE.Geometry();
+		geometrySky.vertices.push(
+			new THREE.Vector3( sky_edge_3D[0][0], sky_edge_3D[0][1], sky_edge_3D[0][2] ),
+			new THREE.Vector3( sky_edge_3D[1][0], sky_edge_3D[1][1], sky_edge_3D[1][2] )
 		);
 		
+
+		// Draw lines
+		var lineSky = new THREE.Line( geometrySky, materialSky );
 		var lineGround = new THREE.Line( geometryGround, materialGround );
+
+		// Add to scene
+		scene.add( lineSky ); 
 		scene.add( lineGround ); 
 	}
 
