@@ -53,7 +53,7 @@ function init() {
 
 	scene = new THREE.Scene();
 
-	drawMap();
+	// drawMap();
 
 	renderer = new THREE.WebGLRenderer({ antialias: true });
 	renderer.setSize(window.innerWidth, window.innerHeight);
@@ -274,14 +274,12 @@ function drawEdges(in3D = true) {
 
 
 function drawPolygons() {
-	// Get 3D coordinates
-	let [ground_coord_3D, sky_coord_3D] = computeCoordinates3D();
 
 	// create a simple square shape. We duplicate the top left and bottom right
 	var polygonsGeometry = new THREE.BufferGeometry();
 
-	let vertices = fillVertices(ground_coord_3D, sky_coord_3D);
-	let uv = fillUV(ground_coord_3D, sky_coord_3D);
+	let vertices = fillVertices();
+	let uv = fillUV();
 	
 	console.log(vertices)
 
@@ -305,7 +303,9 @@ function drawPolygons() {
  * @param {[[[Float]]]} sky_coord_3D 
  * @return {Float32Array} vertices
  */
-function fillVertices(ground_coord_3D, sky_coord_3D) {
+function fillVertices() {
+	// Get 3D coordinates
+	let [ground_coord_3D, sky_coord_3D] = computeCoordinates3D();
 
 	// *2 => 1 edge = 6 points for 2 triangles
 	// *3 => 1 point = 3 coordinates (X, Y, Z)
@@ -354,10 +354,13 @@ function fillVertices(ground_coord_3D, sky_coord_3D) {
  * @param {[[[Float]]]} sky_coord_3D 
  * @return {Float32Array} uv
  */
-function fillUV(ground_coord_3D, sky_coord_3D) {
+function fillUV() {
+	// Get 2D coordinates
+	let [ground_coord_2D, sky_coord_2D] = computeCoordinates2D();
+
 	// *2 => 1 edge = 6 points for 2 triangles
 	// *3 => 1 point = 2 uv coordinates (2D)
-	let nb_uv = (ground_coord_3D.length + sky_coord_3D.length) * 6 * 2 
+	let nb_uv = (ground_coord_2D.length + sky_coord_2D.length) * 6 * 2 
 	/* Initialisation of vertices and uv */
 	var uv = new Float32Array( nb_uv );
 
@@ -374,9 +377,9 @@ function fillUV(ground_coord_3D, sky_coord_3D) {
 
 
 	let i_uv = 0;
-	for (i=0; i<ground_coord_3D.length; i++) {
-		let [ground1, ground2] = ground_coord_3D[i];
-		let [sky1, sky2] = sky_coord_3D[i];
+	for (i=0; i<ground_coord_2D.length; i++) {
+		let [ground1, ground2] = ground_coord_2D[i];
+		let [sky1, sky2] = sky_coord_2D[i];
 
 		uv.set([
 			( ground1[0] + HALF_WIDTH ) / ( 2 * HALF_WIDTH ), 	// u
