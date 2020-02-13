@@ -1,5 +1,3 @@
-/* Three.js */
-
 /* Global variables */
 const HALF_WIDTH = 394.0;		// Half width of image
 const HALF_HEIGHT = 256.5;	// Half height of image
@@ -33,9 +31,9 @@ Promise.all(promises)
 		sky_edges = promises[0];
 		ground_edges = promises[1];
 
-		drawEdges();
-		drawPolygons();
-		drawBlackHoles();
+		createEdges();
+		createPolygons();
+		createBlackHoles();
 	})
 
 
@@ -44,15 +42,18 @@ init();
 animate();
 
 
-/* FUNCTIONS */
+/* --- THREEJS AND GUI FUNCTIONS */
 
+/**
+ * Initialisation of Scene, Camera, Renderer, Controls and Map
+ */
 function init() {
 	camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.01, 1000);
 	camera.position.z = 700;
 
 	scene = new THREE.Scene();
 
-	drawMap();
+	createMap();
 
 	renderer = new THREE.WebGLRenderer({ antialias: true });
 	renderer.setSize(window.innerWidth, window.innerHeight);
@@ -61,9 +62,6 @@ function init() {
 	controls = new THREE.OrbitControls(camera, renderer.domElement);
 }
 
-/**
- * 
- */
 function animate() {
 	requestAnimationFrame(animate);
 
@@ -71,8 +69,6 @@ function animate() {
 
 	renderer.render(scene, camera);
 }
-
-
 
 /* Dat Gui */
 var FizzyText = function () {
@@ -83,7 +79,7 @@ var FizzyText = function () {
 		camera.position.z = 700.;
 		camera.updateProjectionMatrix();
 	}
-	
+
 	// this.message = 'dat.gui';
 	// this.speed = 0.8;
 	// this.opacity = 50;
@@ -109,48 +105,7 @@ window.onload = function () {
 
 
 
-/**
- * Draw only the map in 2D
- */
-function drawMap() {
-	// create a simple square shape. We duplicate the top left and bottom right
-	var mapGeometry = new THREE.BufferGeometry();
-
-	/* Initialisation of vertices and uv with bounding box */
-	// Vertices because each vertex needs to appear once per triangle.
-	var vertices = new Float32Array([
-		-HALF_WIDTH, -HALF_HEIGHT, 0.0, //-1.0, -1.0, 0.0,	
-		HALF_WIDTH, -HALF_HEIGHT, 0.0, // 1.0, -1.0, 0.0,
-		HALF_WIDTH, HALF_HEIGHT, 0.0, // 1.0,  1.0, 0.0,
-
-		HALF_WIDTH, HALF_HEIGHT, 0.0, // 1.0,  1.0, 0.0,
-		-HALF_WIDTH, HALF_HEIGHT, 0.0, //-1.0,  1.0, 0.0,
-		-HALF_WIDTH, -HALF_HEIGHT, 0.0 //-1.0, -1.0, 0.0
-	]);
-
-	var uv = new Float32Array([
-		0.0, 0.0,
-		1.0, 0.0,
-		1.0, 1.0,
-
-		1.0, 1.0,
-		0.0, 1.0,
-		0.0, 0.0
-	]);
-
-
-	// itemSize = 3 because there are 3 values (components) per vertex
-	mapGeometry.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
-	mapGeometry.setAttribute('uv', new THREE.BufferAttribute(uv, 2));
-
-	let mapMaterial = new THREE.MeshBasicMaterial({ transparent: true, color: 0xFFFFFF, map: texture, depthWrite: false });
-
-	map = new THREE.Mesh(mapGeometry, mapMaterial);
-
-	scene.add(map);
-}
-
-
+/* --- FUNCTIONS --------------------------------------------------- */
 /**
  * Compute the 2D coordinates for ground and sky (edges by edges)
  * @returns {[[[[float]]]]} [ ground_coord_2D, sky_coord_2D ]
@@ -224,12 +179,56 @@ function computeCoordinates3D() {
 }
 
 
+
+
 /**
- * Draw only the edges: ie sky and ground separately (by default in 3D)
+ * Create only the map in 2D
+ */
+function createMap() {
+	// create a simple square shape. We duplicate the top left and bottom right
+	var mapGeometry = new THREE.BufferGeometry();
+
+	/* Initialisation of vertices and uv with bounding box */
+	// Vertices because each vertex needs to appear once per triangle.
+	var vertices = new Float32Array([
+		-HALF_WIDTH, -HALF_HEIGHT, 0.0, //-1.0, -1.0, 0.0,	
+		HALF_WIDTH, -HALF_HEIGHT, 0.0, // 1.0, -1.0, 0.0,
+		HALF_WIDTH, HALF_HEIGHT, 0.0, // 1.0,  1.0, 0.0,
+
+		HALF_WIDTH, HALF_HEIGHT, 0.0, // 1.0,  1.0, 0.0,
+		-HALF_WIDTH, HALF_HEIGHT, 0.0, //-1.0,  1.0, 0.0,
+		-HALF_WIDTH, -HALF_HEIGHT, 0.0 //-1.0, -1.0, 0.0
+	]);
+
+	var uv = new Float32Array([
+		0.0, 0.0,
+		1.0, 0.0,
+		1.0, 1.0,
+
+		1.0, 1.0,
+		0.0, 1.0,
+		0.0, 0.0
+	]);
+
+
+	// itemSize = 3 because there are 3 values (components) per vertex
+	mapGeometry.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
+	mapGeometry.setAttribute('uv', new THREE.BufferAttribute(uv, 2));
+
+	let mapMaterial = new THREE.MeshBasicMaterial({ transparent: true, color: 0xFFFFFF, map: texture, depthWrite: false });
+
+	map = new THREE.Mesh(mapGeometry, mapMaterial);
+
+	scene.add(map);
+}
+
+
+/**
+ * Create only the edges: ie sky and ground separately (by default in 3D)
  * @param {boolean} in3D 
  * @returns 2 geometries
  */
-function drawEdges(in3D = true) {
+function createEdges(in3D = true) {
 	let ground_coord = [];
 	let sky_coord = [];
 
@@ -278,10 +277,10 @@ function drawEdges(in3D = true) {
 }
 
 /**
- * Draw polygons
+ * Create polygons
  * @return 1 geometry of polygons
  */
-function drawPolygons() {
+function createPolygons() {
 	// Get 3D coordinates
 	let [ground_coord_3D, sky_coord_3D] = computeCoordinates3D();
 	// Get 2D coordinates
@@ -313,10 +312,10 @@ function drawPolygons() {
 
 
 /**
- * Draw black polygons representing holes in the map
+ * Create black polygons representing holes in the map
  * @return 1 geometry
  */
-function drawBlackHoles() {
+function createBlackHoles() {
 	// Get 2D coordinates
 	let [ground_coord_2D, sky_coord_2D] = computeCoordinates2D();
 
@@ -336,6 +335,9 @@ function drawBlackHoles() {
 }
 
 
+
+
+/* --- OTHER FUNCTIONS -------------------------------------------------------- */
 
 /**
  * Create the vertices array
