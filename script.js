@@ -280,12 +280,37 @@ function drawPolygons() {
 	// create a simple square shape. We duplicate the top left and bottom right
 	var polygonsGeometry = new THREE.BufferGeometry();
 
+	let vertices = fillVertices(ground_coord_3D, sky_coord_3D);
+	let uv = fillUV(ground_coord_3D, sky_coord_3D);
+	
+	console.log(vertices)
+
+	// itemSize = 3 because there are 3 values (components) per vertex
+	polygonsGeometry.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
+	polygonsGeometry.setAttribute('uv', new THREE.BufferAttribute(uv, 2));
+	// console.log(geometry);
+	
+	let polygonsMaterial = new THREE.MeshBasicMaterial({ transparent: true, color: 0xFFFFFF, map: texture }); //, side: THREE.DoubleSide}) //, map: texture });
+
+	polygons = new THREE.Mesh(polygonsGeometry, polygonsMaterial);
+	scene.add(polygons);
+
+	console.log(polygons)
+}
+
+
+/**
+ * Create the vertices array
+ * @param {[[[Float]]]} ground_coord_3D 
+ * @param {[[[Float]]]} sky_coord_3D 
+ * @return {Float32Array} vertices
+ */
+function fillVertices(ground_coord_3D, sky_coord_3D) {
 	// *2 => 1 edge = 6 points for 2 triangles
 	// *3 => 1 point = 3 coordinates (X, Y, Z)
 	let nb_vertices = (ground_coord_3D.length + sky_coord_3D.length) * 6 * 3
 	/* Initialisation of vertices and uv */
 	var vertices = new Float32Array( nb_vertices );
-	var uv = new Float32Array( nb_vertices );
 
 	/* Fill array */
 	let i_vertices = 0;
@@ -334,20 +359,60 @@ function drawPolygons() {
 
 		//i_vertices += 6 * 3; // 6 points added with each 3 coords
 	}
-	
-	console.log(vertices)
 
-	// itemSize = 3 because there are 3 values (components) per vertex
-	polygonsGeometry.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
-	// geometry.setAttribute('uv', new THREE.BufferAttribute(uv, 2));
-	// console.log(geometry);
-	
-	let polygonsMaterial = new THREE.MeshBasicMaterial({ transparent: true, color: 0xFFFFFF, side: THREE.DoubleSide}) //, map: texture });
-
-	polygons = new THREE.Mesh(polygonsGeometry, polygonsMaterial);
-	scene.add(polygons);
-
-	console.log(polygons)
+	return vertices;
 }
 
 
+
+/**
+ * Create the uv array
+ * @param {[[[Float]]]} ground_coord_3D 
+ * @param {[[[Float]]]} sky_coord_3D 
+ * @return {Float32Array} uv
+ */
+function fillUV(ground_coord_3D, sky_coord_3D) {
+	// *2 => 1 edge = 6 points for 2 triangles
+	// *3 => 1 point = 2 uv coordinates (2D)
+	let nb_uv = (ground_coord_3D.length + sky_coord_3D.length) * 6 * 2
+	/* Initialisation of vertices and uv */
+	var uv = new Float32Array( nb_uv );
+
+	/* Fill array */
+	let i_uv = 0;
+	for (i=0; i<ground_coord_3D.length; i++) {
+		let [ground1, ground2] = ground_coord_3D[i];
+		let [sky1, sky2] = sky_coord_3D[i];
+
+
+
+		uv[i_uv] = ( ground1[0] + HALF_WIDTH ) / ( 2 * HALF_WIDTH )
+		i_uv++;
+		uv[i_uv] = ( ground1[1] + HALF_HEIGHT ) / ( 2 * HALF_HEIGHT )
+		i_uv++;
+		uv[i_uv] = ( ground2[0] + HALF_WIDTH ) / ( 2 * HALF_WIDTH )
+		i_uv++;
+		uv[i_uv] = ( ground2[1] + HALF_HEIGHT ) / ( 2 * HALF_HEIGHT )
+		i_uv++;
+		uv[i_uv] = ( sky2[0] + HALF_WIDTH ) / ( 2 * HALF_WIDTH )
+		i_uv++;
+		uv[i_uv] = ( sky2[1] + HALF_HEIGHT ) / ( 2 * HALF_HEIGHT )				
+
+		i_uv++;
+		uv[i_uv] = ( sky2[0] + HALF_WIDTH ) / ( 2 * HALF_WIDTH )
+		i_uv++;
+		uv[i_uv] = ( sky2[1] + HALF_HEIGHT ) / ( 2 * HALF_HEIGHT )		
+		i_uv++;
+		uv[i_uv] = ( sky1[0] + HALF_WIDTH ) / ( 2 * HALF_WIDTH )
+		i_uv++;
+		uv[i_uv] = ( sky1[1] + HALF_HEIGHT ) / ( 2 * HALF_HEIGHT )		
+		i_uv++;
+		uv[i_uv] = ( ground1[0] + HALF_WIDTH ) / ( 2 * HALF_WIDTH )
+		i_uv++;
+		uv[i_uv] = ( ground1[1] + HALF_HEIGHT ) / ( 2 * HALF_HEIGHT )
+		i_uv++;			
+
+	}
+
+	return uv;
+}
