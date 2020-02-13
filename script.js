@@ -145,13 +145,14 @@ function drawMap() {
 	scene.add(plane);
 }
 
+
 /**
- * Compute the coordinates for ground and sky (edges by edges)
- * @returns {[[[[float]]]]} [ ground_coord_3D, sky_coord_3D ]
+ * Compute the 2D coordinates for ground and sky (edges by edges)
+ * @returns {[[[[float]]]]} [ ground_coord_2D, sky_coord_2D ]
  */
-function computeCoordinates() {
-	let ground_coord_3D = [];
-	let sky_coord_3D = [];
+function computeCoordinates2D() {
+	let ground_coord_2D = [];
+	let sky_coord_2D = [];
 
 	for (i=0; i< sky_edges.features.length; i++) {
 		// Get Lambert coordinates
@@ -168,6 +169,30 @@ function computeCoordinates() {
 			[ sky_edge_Lambert[1][0] - TRANS_MAT[0], sky_edge_Lambert[1][1] - TRANS_MAT[1], 0 ]
 		]
 
+		ground_coord_2D.push(ground_edge_2D);
+		sky_coord_2D.push(sky_edge_2D);
+
+	}
+
+	return [ground_coord_2D, sky_coord_2D]
+}
+
+
+/**
+ * Compute the 3D coordinates for ground and sky (edges by edges)
+ * @returns {[[[[float]]]]} [ ground_coord_3D, sky_coord_3D ]
+ */
+function computeCoordinates3D() {
+	let [ground_coord_2D, sky_coord_2D] = computeCoordinates2D();
+
+	let ground_coord_3D = [];
+	let sky_coord_3D = [];
+
+	for (i=0; i< ground_coord_2D.length; i++) {
+		
+		// Calcul 2D coordinates
+		let ground_edge_2D = ground_coord_2D[i];
+		let sky_edge_2D = sky_coord_2D[i];
 
 		// Compute distance: Z for the points couple (both extremities of edge)
 		let z = [
@@ -195,27 +220,35 @@ function computeCoordinates() {
 
 
 /**
- * Draw only the edges: ie sky and ground separately
+ * Draw only the edges: ie sky and ground separately (by default in 3D)
+ * @param {boolean} in3D 
  * @returns 2 geometries
  */
-function drawEdges() {
-	let [ground_coord_3D, sky_coord_3D] = computeCoordinates();
+function drawEdges(in3D = true) {
+	let ground_coord = [];
+	let sky_coord = [];
 
-	for (i=0; i<ground_coord_3D.length; i++) {
+	if (in3D) {
+		[ground_coord, sky_coord] = computeCoordinates3D();
+	} else {
+		[ground_coord, sky_coord] = computeCoordinates2D();
+	}
 
-		let ground_edge_3D = ground_coord_3D[i];
-		let sky_edge_3D = sky_coord_3D[i];
+	for (i=0; i<ground_coord.length; i++) {
+
+		let ground_edge = ground_coord[i];
+		let sky_edge = sky_coord[i];
 
 		// Create geometries
 		var geometryGround = new THREE.Geometry();
 		geometryGround.vertices.push(
-			new THREE.Vector3( ground_edge_3D[0][0], ground_edge_3D[0][1], ground_edge_3D[0][2] ),
-			new THREE.Vector3( ground_edge_3D[1][0], ground_edge_3D[1][1], ground_edge_3D[1][2] )
+			new THREE.Vector3( ground_edge[0][0], ground_edge[0][1], ground_edge[0][2] ),
+			new THREE.Vector3( ground_edge[1][0], ground_edge[1][1], ground_edge[1][2] )
 		);
 		var geometrySky = new THREE.Geometry();
 		geometrySky.vertices.push(
-			new THREE.Vector3( sky_edge_3D[0][0], sky_edge_3D[0][1], sky_edge_3D[0][2] ),
-			new THREE.Vector3( sky_edge_3D[1][0], sky_edge_3D[1][1], sky_edge_3D[1][2] )
+			new THREE.Vector3( sky_edge[0][0], sky_edge[0][1], sky_edge[0][2] ),
+			new THREE.Vector3( sky_edge[1][0], sky_edge[1][1], sky_edge[1][2] )
 		);
 
 
@@ -242,7 +275,7 @@ function drawEdges() {
 
 function drawPolygons() {
 	// Get 3D coordinates
-	let [ground_coord_3D, sky_coord_3D] = computeCoordinates();
+	let [ground_coord_3D, sky_coord_3D] = computeCoordinates3D();
 
 	// create a simple square shape. We duplicate the top left and bottom right
 	var polygonsGeometry = new THREE.BufferGeometry();
