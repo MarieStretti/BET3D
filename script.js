@@ -296,9 +296,13 @@ function drawPolygons() {
 	polygonsGeometry.setAttribute('uv', new THREE.BufferAttribute(uv, 2));
 	// console.log(geometry);
 	
-	let polygonsMaterial = new THREE.MeshBasicMaterial({ transparent: false, color: 0xFFFFFF, map: texture }); //, side: THREE.DoubleSide}) //, map: texture });
+	let polygonsTextureMaterial = new THREE.MeshBasicMaterial({ transparent: false, color: 0xFFFFFF, map: texture, side: THREE.FrontSide }); //, side: THREE.DoubleSide}) //, map: texture });
+	let polygonsColorMaterial = new THREE.MeshBasicMaterial({ transparent: false, color: 0x0, side: THREE.BackSide }); //, side: THREE.DoubleSide}) //, map: texture });
 
-	polygons = new THREE.Mesh(polygonsGeometry, polygonsMaterial);
+	
+	polygons = new THREE.Group();
+	polygons.add( new THREE.Mesh(polygonsGeometry, polygonsTextureMaterial) );
+	polygons.add( new THREE.Mesh(polygonsGeometry, polygonsColorMaterial) );
 	scene.add(polygons);
 
 	console.log(polygons)
