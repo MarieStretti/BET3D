@@ -11,7 +11,7 @@ const GROUND_EDGES_PATH = "edges/ground_edges.json";
 
 /* Definition of our variables */
 var camera, scene, renderer, controls;
-var geometry, material, plane, polygons;
+var geometry, material, plane, polygons, blackHoles;
 var rotationSpeed = 0.01;
 let z_offset = 3;
 
@@ -37,6 +37,7 @@ Promise.all(promises)
 
 		drawEdges();
 		drawPolygons();
+		drawBlackHoles();
 	})
 
 
@@ -53,7 +54,7 @@ function init() {
 
 	scene = new THREE.Scene();
 
-	// drawMap();
+	drawMap();
 
 	renderer = new THREE.WebGLRenderer({ antialias: true });
 	renderer.setSize(window.innerWidth, window.innerHeight);
@@ -161,12 +162,12 @@ function computeCoordinates2D() {
 		
 		// Calcul 2D coordinates
 		let ground_edge_2D = [ 
-			[ ground_edge_Lambert[0][0] - TRANS_MAT[0], ground_edge_Lambert[0][1] - TRANS_MAT[1], 0 ], // Z à 0
-			[ ground_edge_Lambert[1][0] - TRANS_MAT[0], ground_edge_Lambert[1][1] - TRANS_MAT[1], 0 ]
+			[ ground_edge_Lambert[0][0] - TRANS_MAT[0], ground_edge_Lambert[0][1] - TRANS_MAT[1], z_offset ], // Z à 0
+			[ ground_edge_Lambert[1][0] - TRANS_MAT[0], ground_edge_Lambert[1][1] - TRANS_MAT[1], z_offset ]
 		]
 		let sky_edge_2D = [ 
-			[ sky_edge_Lambert[0][0] - TRANS_MAT[0], sky_edge_Lambert[0][1] - TRANS_MAT[1], 0 ],
-			[ sky_edge_Lambert[1][0] - TRANS_MAT[0], sky_edge_Lambert[1][1] - TRANS_MAT[1], 0 ]
+			[ sky_edge_Lambert[0][0] - TRANS_MAT[0], sky_edge_Lambert[0][1] - TRANS_MAT[1], z_offset ],
+			[ sky_edge_Lambert[1][0] - TRANS_MAT[0], sky_edge_Lambert[1][1] - TRANS_MAT[1], z_offset ]
 		]
 
 		ground_coord_2D.push(ground_edge_2D);
@@ -202,12 +203,12 @@ function computeCoordinates3D() {
 
 		// Calculate 3D coordinate
 		let ground_edge_3D = [ 
-			[ ground_edge_2D[0][0], ground_edge_2D[0][1], z_offset ], // Z à 0
-			[ ground_edge_2D[1][0], ground_edge_2D[1][1], z_offset ]
+			[ ground_edge_2D[0][0], ground_edge_2D[0][1], ground_edge_2D[0][2] ], // Z à 0
+			[ ground_edge_2D[1][0], ground_edge_2D[1][1], ground_edge_2D[1][2] ]
 		]
 		let sky_edge_3D = [ 
-			[ ground_edge_2D[0][0], ground_edge_2D[0][1], z_offset + z[0] ],
-			[ ground_edge_2D[1][0], ground_edge_2D[1][1], z_offset + z[1] ]
+			[ ground_edge_2D[0][0], ground_edge_2D[0][1], sky_edge_2D[0][2] + z[0] ],
+			[ ground_edge_2D[1][0], ground_edge_2D[1][1], sky_edge_2D[1][2] + z[1] ]
 		]
 
 		ground_coord_3D.push(ground_edge_3D);
@@ -295,7 +296,7 @@ function drawPolygons() {
 	polygonsGeometry.setAttribute('uv', new THREE.BufferAttribute(uv, 2));
 	// console.log(geometry);
 	
-	let polygonsMaterial = new THREE.MeshBasicMaterial({ transparent: true, color: 0xFFFFFF, map: texture }); //, side: THREE.DoubleSide}) //, map: texture });
+	let polygonsMaterial = new THREE.MeshBasicMaterial({ transparent: false, color: 0xFFFFFF, map: texture }); //, side: THREE.DoubleSide}) //, map: texture });
 
 	polygons = new THREE.Mesh(polygonsGeometry, polygonsMaterial);
 	scene.add(polygons);
@@ -304,8 +305,28 @@ function drawPolygons() {
 }
 
 
-function blackhole() {
+function drawBlackHoles() {
+	// Get 2D coordinates
+	let [ground_coord_2D, sky_coord_2D] = computeCoordinates2D();
 
+	// create a simple square shape. We duplicate the top left and bottom right
+	var blackHolesGeometry = new THREE.BufferGeometry();
+
+	let vertices = fillVertices(ground_coord_2D, sky_coord_2D);
+	let uv = fillUV(ground_coord_2D, sky_coord_2D);
+	
+	console.log(vertices)
+
+	// itemSize = 3 because there are 3 values (components) per vertex
+	blackHolesGeometry.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
+	// console.log(geometry);
+	
+	let blackHolesMaterial = new THREE.MeshBasicMaterial({ transparent: true, color: 0x0, side: THREE.DoubleSide});
+
+	blackHoles = new THREE.Mesh(blackHolesGeometry, blackHolesMaterial);
+	scene.add(blackHoles);
+
+	console.log(blackHoles)
 }
 
 /**
