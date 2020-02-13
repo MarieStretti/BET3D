@@ -11,9 +11,10 @@ const GROUND_EDGES_PATH = "edges/ground_edges.json";
 
 /* Definition of our variables */
 var camera, scene, renderer, controls;
-var geometry, material, plane, polygons, blackHoles;
+var map, polygons, blackHoles;
 var rotationSpeed = 0.01;
-let z_offset = 3;
+let z_offset = 0; // meters
+let z_offset_bh = 0;
 
 
 /* Load Texture and GeoJSON */
@@ -29,11 +30,6 @@ Promise.all(promises)
 	.then(promises => {
 		sky_edges = promises[0];
 		ground_edges = promises[1];
-
-		console.log(sky_edges);
-		console.log(ground_edges);
-
-		console.log(sky_edges.features.length == ground_edges.features.length);
 
 		drawEdges();
 		drawPolygons();
@@ -61,7 +57,6 @@ function init() {
 	document.body.appendChild(renderer.domElement);
 
 	controls = new THREE.OrbitControls(camera, renderer.domElement);
-
 }
 
 /**
@@ -110,7 +105,7 @@ window.onload = function () {
  */
 function drawMap() {
 	// create a simple square shape. We duplicate the top left and bottom right
-	var geometry = new THREE.BufferGeometry();
+	var mapGeometry = new THREE.BufferGeometry();
 
 	/* Initialisation of vertices and uv with bounding box */
 	// Vertices because each vertex needs to appear once per triangle.
@@ -136,14 +131,14 @@ function drawMap() {
 
 
 	// itemSize = 3 because there are 3 values (components) per vertex
-	geometry.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
-	geometry.setAttribute('uv', new THREE.BufferAttribute(uv, 2));
-	// console.log(geometry);
+	mapGeometry.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
+	mapGeometry.setAttribute('uv', new THREE.BufferAttribute(uv, 2));
 	
-	material = new THREE.MeshBasicMaterial({ transparent: true, color: 0xFFFFFF, map: texture });
+	let mapMaterial = new THREE.MeshBasicMaterial({ transparent: true, color: 0xFFFFFF, map: texture, depthWrite: false});
 
-	plane = new THREE.Mesh(geometry, material);
-	scene.add(plane);
+	map = new THREE.Mesh(mapGeometry, mapMaterial);
+
+	scene.add(map);
 }
 
 
@@ -162,12 +157,12 @@ function computeCoordinates2D() {
 		
 		// Calcul 2D coordinates
 		let ground_edge_2D = [ 
-			[ ground_edge_Lambert[0][0] - TRANS_MAT[0], ground_edge_Lambert[0][1] - TRANS_MAT[1], z_offset ], // Z à 0
-			[ ground_edge_Lambert[1][0] - TRANS_MAT[0], ground_edge_Lambert[1][1] - TRANS_MAT[1], z_offset ]
+			[ ground_edge_Lambert[0][0] - TRANS_MAT[0], ground_edge_Lambert[0][1] - TRANS_MAT[1], z_offset_bh ], // Z à 0
+			[ ground_edge_Lambert[1][0] - TRANS_MAT[0], ground_edge_Lambert[1][1] - TRANS_MAT[1], z_offset_bh ]
 		]
 		let sky_edge_2D = [ 
-			[ sky_edge_Lambert[0][0] - TRANS_MAT[0], sky_edge_Lambert[0][1] - TRANS_MAT[1], z_offset ],
-			[ sky_edge_Lambert[1][0] - TRANS_MAT[0], sky_edge_Lambert[1][1] - TRANS_MAT[1], z_offset ]
+			[ sky_edge_Lambert[0][0] - TRANS_MAT[0], sky_edge_Lambert[0][1] - TRANS_MAT[1], z_offset_bh ],
+			[ sky_edge_Lambert[1][0] - TRANS_MAT[0], sky_edge_Lambert[1][1] - TRANS_MAT[1], z_offset_bh ]
 		]
 
 		ground_coord_2D.push(ground_edge_2D);
@@ -294,7 +289,6 @@ function drawPolygons() {
 	// itemSize = 3 because there are 3 values (components) per vertex
 	polygonsGeometry.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
 	polygonsGeometry.setAttribute('uv', new THREE.BufferAttribute(uv, 2));
-	// console.log(geometry);
 	
 	let polygonsTextureMaterial = new THREE.MeshBasicMaterial({ transparent: false, color: 0xFFFFFF, map: texture, side: THREE.FrontSide }); //, side: THREE.DoubleSide}) //, map: texture });
 	let polygonsColorMaterial = new THREE.MeshBasicMaterial({ transparent: false, color: 0x0, side: THREE.BackSide }); //, side: THREE.DoubleSide}) //, map: texture });
@@ -309,6 +303,10 @@ function drawPolygons() {
 }
 
 
+/**
+ * Draw black polygons representing holes in the map
+ * @return 1 geometry
+ */
 function drawBlackHoles() {
 	// Get 2D coordinates
 	let [ground_coord_2D, sky_coord_2D] = computeCoordinates2D();
@@ -317,21 +315,18 @@ function drawBlackHoles() {
 	var blackHolesGeometry = new THREE.BufferGeometry();
 
 	let vertices = fillVertices(ground_coord_2D, sky_coord_2D);
-	let uv = fillUV(ground_coord_2D, sky_coord_2D);
 	
-	console.log(vertices)
 
 	// itemSize = 3 because there are 3 values (components) per vertex
 	blackHolesGeometry.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
-	// console.log(geometry);
 	
-	let blackHolesMaterial = new THREE.MeshBasicMaterial({ transparent: true, color: 0x0, side: THREE.DoubleSide});
+	let blackHolesMaterial = new THREE.MeshBasicMaterial({ transparent: true, color: 0x0, side: THREE.DoubleSide, depthWrite: false });
 
 	blackHoles = new THREE.Mesh(blackHolesGeometry, blackHolesMaterial);
 	scene.add(blackHoles);
-
-	console.log(blackHoles)
 }
+
+
 
 /**
  * Create the vertices array
