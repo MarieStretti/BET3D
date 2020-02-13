@@ -306,6 +306,7 @@ function drawPolygons() {
  * @return {Float32Array} vertices
  */
 function fillVertices(ground_coord_3D, sky_coord_3D) {
+
 	// *2 => 1 edge = 6 points for 2 triangles
 	// *3 => 1 point = 3 coordinates (X, Y, Z)
 	let nb_vertices = (ground_coord_3D.length + sky_coord_3D.length) * 6 * 3
@@ -313,51 +314,33 @@ function fillVertices(ground_coord_3D, sky_coord_3D) {
 	var vertices = new Float32Array( nb_vertices );
 
 	/* Fill array */
+	vertices.set([-HALF_WIDTH, -HALF_HEIGHT, 0.0], 0);	//-1.0, -1.0, 0.0,
+	vertices.set([HALF_WIDTH, -HALF_HEIGHT, 0.0], 3);	// 1.0, -1.0, 0.0,
+	vertices.set([HALF_WIDTH,  HALF_HEIGHT, 0.0], 6);	// 1.0,  1.0, 0.0,
+
+	vertices.set([HALF_WIDTH,  HALF_HEIGHT, 0.0], 9);	// 1.0,  1.0, 0.0,
+	vertices.set([-HALF_WIDTH,  HALF_HEIGHT, 0.0], 12);	//-1.0,  1.0, 0.0,
+	vertices.set([-HALF_WIDTH, -HALF_HEIGHT, 0.0], 15);	//-1.0, -1.0, 0.0
+		 
+	
 	let i_vertices = 0;
 	for (i=0; i<ground_coord_3D.length; i++) {
 		let [ground1, ground2] = ground_coord_3D[i];
 		let [sky1, sky2] = sky_coord_3D[i];
 
-		vertices[i_vertices] = ground1[0]
-		i_vertices++;
-		vertices[i_vertices] = ground1[1]
-		i_vertices++;
-		vertices[i_vertices] = ground1[2]
-		i_vertices++;
-		vertices[i_vertices] = ground2[0]
-		i_vertices++;
-		vertices[i_vertices] = ground2[1]
-		i_vertices++;
-		vertices[i_vertices] = ground2[2]
-		i_vertices++;
-		vertices[i_vertices] = sky2[0]
-		i_vertices++;
-		vertices[i_vertices] = sky2[1]
-		i_vertices++;
-		vertices[i_vertices] = sky2[2]					//	  |			   /	  |
-																			//	  |			 /		  |
-		
-		i_vertices++;
-		vertices[i_vertices] = sky2[0]
-		i_vertices++;
-		vertices[i_vertices] = sky2[1]
-		i_vertices++;
-		vertices[i_vertices] = sky2[2]
-		i_vertices++;
-		vertices[i_vertices] = sky1[0]
-		i_vertices++;
-		vertices[i_vertices] = sky1[1]
-		i_vertices++;
-		vertices[i_vertices] = sky1[2]
-		i_vertices++;
-		vertices[i_vertices] = ground1[0]
-		i_vertices++;
-		vertices[i_vertices] = ground1[1]
-		i_vertices++;
-		vertices[i_vertices] = ground1[2]
-		i_vertices++;			//	ground1 ----------- ground2
+		vertices.set(ground1, i_vertices);
+		i_vertices += 3;
+		vertices.set(ground2, i_vertices);
+		i_vertices += 3;
+		vertices.set(sky2, i_vertices);
+		i_vertices += 3;
 
-		//i_vertices += 6 * 3; // 6 points added with each 3 coords
+		vertices.set(sky2, i_vertices);
+		i_vertices += 3;
+		vertices.set(sky1, i_vertices);
+		i_vertices += 3;
+		vertices.set(ground1, i_vertices);
+		i_vertices += 3;
 	}
 
 	return vertices;
@@ -374,43 +357,58 @@ function fillVertices(ground_coord_3D, sky_coord_3D) {
 function fillUV(ground_coord_3D, sky_coord_3D) {
 	// *2 => 1 edge = 6 points for 2 triangles
 	// *3 => 1 point = 2 uv coordinates (2D)
-	let nb_uv = (ground_coord_3D.length + sky_coord_3D.length) * 6 * 2
+	let nb_uv = (ground_coord_3D.length + sky_coord_3D.length) * 6 * 2 
 	/* Initialisation of vertices and uv */
 	var uv = new Float32Array( nb_uv );
 
 	/* Fill array */
+
+	uv.set([0.0, 0.0], 0);
+	uv.set([1.0, 0.0], 2);
+	uv.set([1.0, 1.0], 4);
+
+	uv.set([1.0, 1.0], 6);
+	uv.set([0.0, 1.0], 8);
+	uv.set([0.0, 0.0], 10);
+
+
+
 	let i_uv = 0;
 	for (i=0; i<ground_coord_3D.length; i++) {
 		let [ground1, ground2] = ground_coord_3D[i];
 		let [sky1, sky2] = sky_coord_3D[i];
 
+		uv.set([
+			( ground1[0] + HALF_WIDTH ) / ( 2 * HALF_WIDTH ), 	// u
+			( ground1[1] + HALF_HEIGHT ) / ( 2 * HALF_HEIGHT )	// v
+		], i_uv);
+		i_uv += 2;
+		uv.set([
+			( ground2[0] + HALF_WIDTH ) / ( 2 * HALF_WIDTH ), 	// u
+			( ground2[1] + HALF_HEIGHT ) / ( 2 * HALF_HEIGHT )	// v
+		], i_uv);
+		i_uv += 2;
+		uv.set([
+			( sky2[0] + HALF_WIDTH ) / ( 2 * HALF_WIDTH ), 	// u
+			( sky2[1] + HALF_HEIGHT ) / ( 2 * HALF_HEIGHT )	// v
+		], i_uv);
+		i_uv += 2;
 
-
-		uv[i_uv] = ( ground1[0] + HALF_WIDTH ) / ( 2 * HALF_WIDTH )
-		i_uv++;
-		uv[i_uv] = ( ground1[1] + HALF_HEIGHT ) / ( 2 * HALF_HEIGHT )
-		i_uv++;
-		uv[i_uv] = ( ground2[0] + HALF_WIDTH ) / ( 2 * HALF_WIDTH )
-		i_uv++;
-		uv[i_uv] = ( ground2[1] + HALF_HEIGHT ) / ( 2 * HALF_HEIGHT )
-		i_uv++;
-		uv[i_uv] = ( sky2[0] + HALF_WIDTH ) / ( 2 * HALF_WIDTH )
-		i_uv++;
-		uv[i_uv] = ( sky2[1] + HALF_HEIGHT ) / ( 2 * HALF_HEIGHT )				
-
-		i_uv++;
-		uv[i_uv] = ( sky2[0] + HALF_WIDTH ) / ( 2 * HALF_WIDTH )
-		i_uv++;
-		uv[i_uv] = ( sky2[1] + HALF_HEIGHT ) / ( 2 * HALF_HEIGHT )		
-		i_uv++;
-		uv[i_uv] = ( sky1[0] + HALF_WIDTH ) / ( 2 * HALF_WIDTH )
-		i_uv++;
-		uv[i_uv] = ( sky1[1] + HALF_HEIGHT ) / ( 2 * HALF_HEIGHT )		
-		i_uv++;
-		uv[i_uv] = ( ground1[0] + HALF_WIDTH ) / ( 2 * HALF_WIDTH )
-		i_uv++;
-		uv[i_uv] = ( ground1[1] + HALF_HEIGHT ) / ( 2 * HALF_HEIGHT )
-		i_uv++;			
+		uv.set([
+			( sky2[0] + HALF_WIDTH ) / ( 2 * HALF_WIDTH ), 	// u
+			( sky2[1] + HALF_HEIGHT ) / ( 2 * HALF_HEIGHT )	// v
+		], i_uv);
+		i_uv += 2;
+		uv.set([
+			( sky1[0] + HALF_WIDTH ) / ( 2 * HALF_WIDTH ), 	// u
+			( sky1[1] + HALF_HEIGHT ) / ( 2 * HALF_HEIGHT )	// v
+		], i_uv);
+		i_uv += 2;
+		uv.set([
+			( ground1[0] + HALF_WIDTH ) / ( 2 * HALF_WIDTH ), 	// u
+			( ground1[1] + HALF_HEIGHT ) / ( 2 * HALF_HEIGHT )	// v
+		], i_uv);
+		i_uv += 2;		
 
 	}
 
