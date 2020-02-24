@@ -11,7 +11,7 @@ const GROUND_EDGES_PATH = "edges/ground_edges.json";
 
 /* Definition of our variables */
 var camera, scene, renderer, controls;
-var map, polygons, blackHoles;
+var map, polygons, blackHoles, linesGround, linesSky;
 var rotationSpeed = 0.01;
 let z_offset = 0; // meters
 let z_offset_bh = 0;
@@ -51,6 +51,8 @@ function init() {
 	camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.01, 1000);
 	camera.position.z = 700;
 
+	console.log("initialisation",camera)
+
 	scene = new THREE.Scene();
 
 	createMap();
@@ -59,7 +61,9 @@ function init() {
 	renderer.setSize(window.innerWidth, window.innerHeight);
 	document.body.appendChild(renderer.domElement);
 
+	// Define orbitControls and their initial state
 	controls = new THREE.OrbitControls(camera, renderer.domElement);
+	controls.saveState()
 }
 
 function animate() {
@@ -73,17 +77,20 @@ function animate() {
 /* Dat Gui */
 var FizzyText = function () {
 	this.resetView = function () {
-		console.log(camera)
+		// Reset camera position
 		camera.position.x = 0.;
 		camera.position.y = 0.;
 		camera.position.z = 700.;
 		camera.updateProjectionMatrix();
+
+		// Reset orbitControls state to the initial state
+		controls.reset();
 	}
 
 	// this.message = 'dat.gui';
 	// this.speed = 0.8;
 	// this.opacity = 50;
-	// this.displayOutline = false;
+	this.mode3D = true;
 
 };
 
@@ -100,7 +107,15 @@ window.onload = function () {
 	// 	.onChange((value) => {
 	// 		material.opacity = value / 100;
 	// 	});
-	// gui.add(text, 'displayOutline');
+	gui.add(text, 'mode3D')
+		.onChange((value) => {
+
+			polygons.visible = value;
+			blackHoles.visible = value;
+			linesGround.visible = value;
+			linesSky.visible = value;
+
+		});
 };
 
 
@@ -238,6 +253,9 @@ function createEdges(in3D = true) {
 		[ground_coord, sky_coord] = computeCoordinates2D();
 	}
 
+	linesGround = new THREE.Group();
+	linesSky = new THREE.Group();
+
 	for (i = 0; i < ground_coord.length; i++) {
 
 		let ground_edge = ground_coord[i];
@@ -266,13 +284,16 @@ function createEdges(in3D = true) {
 
 
 		// Draw lines
-		var lineSky = new THREE.Line(geometrySky, materialSky);
 		var lineGround = new THREE.Line(geometryGround, materialGround);
+		var lineSky = new THREE.Line(geometrySky, materialSky);
 
-		// Add to scene
-		scene.add(lineSky);
-		scene.add(lineGround);
+		linesGround.add(lineGround);
+		linesSky.add(lineSky);
 	}
+	// Add to scene
+	scene.add(linesGround);
+	scene.add(linesSky);
+	console.log(linesGround);
 
 }
 
