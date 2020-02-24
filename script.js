@@ -48,8 +48,9 @@ animate();
  * Initialisation of Scene, Camera, Renderer, Controls and Map
  */
 function init() {
-	camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.01, 1000);
+	camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.01, 10000);
 	camera.position.z = 700;
+	camera.up.set(0, 0, 1);
 
 	console.log("initialisation",camera)
 
@@ -63,6 +64,7 @@ function init() {
 
 	// Define orbitControls and their initial state
 	controls = new THREE.OrbitControls(camera, renderer.domElement);
+
 	controls.saveState()
 }
 
@@ -76,7 +78,7 @@ function animate() {
 
 /* Dat Gui */
 var FizzyText = function () {
-	this.resetView = function () {
+	this.orthoView = function () {
 		// Reset camera position
 		camera.position.x = 0.;
 		camera.position.y = 0.;
@@ -85,6 +87,24 @@ var FizzyText = function () {
 
 		// Reset orbitControls state to the initial state
 		controls.reset();
+	}
+	this.turgotView = function () {
+		console.log("Turgot View");
+		console.log(controls)
+		console.log(controls.getAzimuthalAngle())
+		
+		// Modify camera position
+
+		camera.position.x = -490.
+		camera.position.y =  455.
+		camera.position.z =  340.
+		camera.updateProjectionMatrix();
+
+
+		console.log("après", camera)
+
+		// Reset orbitControls state to the initial state
+		// controls.reset();
 	}
 
 	// this.message = 'dat.gui';
@@ -97,7 +117,8 @@ var FizzyText = function () {
 window.onload = function () {
 	var text = new FizzyText();
 	var gui = new dat.GUI();
-	gui.add(text, 'resetView');
+	gui.add(text, 'orthoView');
+	gui.add(text, 'turgotView');
 	// gui.add(text, 'message');
 	// gui.add(text, 'speed', -5, 5)
 	// 	.onChange((value) => {
@@ -293,7 +314,6 @@ function createEdges(in3D = true) {
 	// Add to scene
 	scene.add(linesGround);
 	scene.add(linesSky);
-	console.log(linesGround);
 
 }
 
@@ -313,7 +333,6 @@ function createPolygons() {
 	let vertices = fillVertices(ground_coord_3D, sky_coord_3D);
 	let uv = fillUV(ground_coord_2D, sky_coord_2D);
 
-	console.log(vertices)
 
 	// itemSize = 3 because there are 3 values (components) per vertex
 	polygonsGeometry.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
@@ -328,7 +347,6 @@ function createPolygons() {
 	polygons.add(new THREE.Mesh(polygonsGeometry, polygonsColorMaterial));
 	scene.add(polygons);
 
-	console.log(polygons)
 }
 
 
