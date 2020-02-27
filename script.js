@@ -11,10 +11,8 @@ const GROUND_EDGES_PATH = "edges/ground_edges.json";
 
 /* Definition of our variables */
 var camera, scene, renderer, controls;
-var map, polygons, blackHoles, linesGround, linesSky;
-var rotationSpeed = 0.01;
-let z_offset = 0; // meters
-let z_offset_bh = 0;
+var map, buildings, blackHoles, linesGround, linesSky;
+let z_offset_bh = 0; // (meters) to elevate the building buildings
 
 
 /* Load Texture Map*/
@@ -26,6 +24,9 @@ let skyPromise = fetch(SKY_EDGES_PATH).then(result => result.json());
 let groundPromise = fetch(GROUND_EDGES_PATH).then(result => result.json());
 let promises = [skyPromise, groundPromise]
 
+/**
+ * Promise for reception of the GeoJSON
+ */
 Promise.all(promises)
 	.then(promises => {
 		sky_edges = promises[0];
@@ -68,6 +69,9 @@ function init() {
 	controls.saveState()
 }
 
+/**
+ * Method for animation at each reaload of frame
+ */
 function animate() {
 	requestAnimationFrame(animate);
 
@@ -76,9 +80,11 @@ function animate() {
 	renderer.render(scene, camera);
 }
 
+
 /* Dat Gui */
 var FizzyText = function () {
-	this.orthoView = function () {
+	// Button to modify view : view from the zenith
+	this.zenithView = function () {
 		// Reset camera position
 		camera.position.x = 0.;
 		camera.position.y = 0.;
@@ -88,54 +94,33 @@ var FizzyText = function () {
 		// Reset orbitControls state to the initial state
 		controls.reset();
 	}
-	this.turgotView = function () {
-		console.log("Turgot View");
-		console.log(controls)
-		console.log(controls.getAzimuthalAngle())
-		
+	// Button to modify view : view in Turgot perspective
+	this.turgotView = function () {		
 		// Modify camera position
-
 		camera.position.x = -490.
 		camera.position.y =  455.
 		camera.position.z =  340.
 		camera.updateProjectionMatrix();
-
-
-		console.log("après", camera)
-
-		// Reset orbitControls state to the initial state
-		// controls.reset();
 	}
 
-	// this.message = 'dat.gui';
-	// this.speed = 0.8;
-	// this.opacity = 50;
+	// Button to pass from a 3D view with the buildings and a 2D view with only the map
 	this.mode3D = true;
 
 };
 
+
 window.onload = function () {
 	var text = new FizzyText();
 	var gui = new dat.GUI();
-	gui.add(text, 'orthoView');
+
+	gui.add(text, 'zenithView');
 	gui.add(text, 'turgotView');
-	// gui.add(text, 'message');
-	// gui.add(text, 'speed', -5, 5)
-	// 	.onChange((value) => {
-	// 		rotationSpeed = value / 100;
-	// 	});
-	// gui.add(text, 'opacity', 0, 100)
-	// 	.onChange((value) => {
-	// 		material.opacity = value / 100;
-	// 	});
 	gui.add(text, 'mode3D')
 		.onChange((value) => {
-
-			polygons.visible = value;
+			buildings.visible = value;
 			blackHoles.visible = value;
 			linesGround.visible = value;
 			linesSky.visible = value;
-
 		});
 };
 
@@ -167,7 +152,6 @@ function computeCoordinates2D() {
 
 		ground_coord_2D.push(ground_edge_2D);
 		sky_coord_2D.push(sky_edge_2D);
-
 	}
 
 	return [ground_coord_2D, sky_coord_2D]
@@ -208,7 +192,6 @@ function computeCoordinates3D() {
 
 		ground_coord_3D.push(ground_edge_3D);
 		sky_coord_3D.push(sky_edge_3D);
-
 	}
 
 	return [ground_coord_3D, sky_coord_3D]
@@ -225,7 +208,6 @@ function createMap() {
 	var mapGeometry = new THREE.BufferGeometry();
 
 	/* Initialisation of vertices and uv with bounding box */
-	// Vertices because each vertex needs to appear once per triangle.
 	var vertices = new Float32Array([
 		-HALF_WIDTH, -HALF_HEIGHT, 0.0, //-1.0, -1.0, 0.0,	
 		HALF_WIDTH, -HALF_HEIGHT, 0.0, // 1.0, -1.0, 0.0,
@@ -246,10 +228,9 @@ function createMap() {
 		0.0, 0.0
 	]);
 
-
-	// itemSize = 3 because there are 3 values (components) per vertex
 	mapGeometry.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
 	mapGeometry.setAttribute('uv', new THREE.BufferAttribute(uv, 2));
+
 
 	let mapMaterial = new THREE.MeshBasicMaterial({ transparent: true, color: 0xFFFFFF, map: texture, depthWrite: false });
 
@@ -311,42 +292,41 @@ function createEdges(in3D = true) {
 		linesGround.add(lineGround);
 		linesSky.add(lineSky);
 	}
+
 	// Add to scene
 	scene.add(linesGround);
 	scene.add(linesSky);
-
 }
 
 /**
- * Create polygons
- * @return 1 geometry of polygons
+ * Create buildings by creating a geometry for the frontage : frontside with texture and backside in black
+ * @return 1 group geometry of buildings
  */
 function createPolygons() {
 	// Get 3D coordinates
 	let [ground_coord_3D, sky_coord_3D] = computeCoordinates3D();
-	// Get 2D coordinates
+	// Get 2D coordinates for texture calcul
 	let [ground_coord_2D, sky_coord_2D] = computeCoordinates2D();
 
 	// create a simple square shape. We duplicate the top left and bottom right
-	var polygonsGeometry = new THREE.BufferGeometry();
+	var buildingsGeometry = new THREE.BufferGeometry();
 
 	let vertices = fillVertices(ground_coord_3D, sky_coord_3D);
 	let uv = fillUV(ground_coord_2D, sky_coord_2D);
 
 
-	// itemSize = 3 because there are 3 values (components) per vertex
-	polygonsGeometry.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
-	polygonsGeometry.setAttribute('uv', new THREE.BufferAttribute(uv, 2));
+	buildingsGeometry.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
+	buildingsGeometry.setAttribute('uv', new THREE.BufferAttribute(uv, 2));
 
-	let polygonsTextureMaterial = new THREE.MeshBasicMaterial({ transparent: false, color: 0xFFFFFF, map: texture, side: THREE.FrontSide }); //, side: THREE.DoubleSide}) //, map: texture });
-	let polygonsColorMaterial = new THREE.MeshBasicMaterial({ transparent: false, color: 0x0, side: THREE.BackSide }); //, side: THREE.DoubleSide}) //, map: texture });
+	let buildingsTextureMaterial = new THREE.MeshBasicMaterial({ transparent: false, color: 0xFFFFFF, map: texture, side: THREE.FrontSide }); 
+	let buildingsColorMaterial = new THREE.MeshBasicMaterial({ transparent: false, color: 0x0, side: THREE.BackSide });
 
 
-	polygons = new THREE.Group();
-	polygons.add(new THREE.Mesh(polygonsGeometry, polygonsTextureMaterial));
-	polygons.add(new THREE.Mesh(polygonsGeometry, polygonsColorMaterial));
-	scene.add(polygons);
+	buildings = new THREE.Group();
+	buildings.add(new THREE.Mesh(buildingsGeometry, buildingsTextureMaterial));
+	buildings.add(new THREE.Mesh(buildingsGeometry, buildingsColorMaterial));
 
+	scene.add(buildings);
 }
 
 
