@@ -1,19 +1,6 @@
-# Notes Projet
+# Protocoles
 
-## Liens utiles
-### tuto QGIS géoréférencement
-https://docs.qgis.org/2.8/fr/docs/user_manual/plugins/plugins_georeferencer.html
-
-
-### OpenData Bati
-1. OpenData APUR : http://opendata.apur.org/search 
-1. Bati Paris + année ou période construction : http://opendata.apur.org/datasets/emprise-batie-paris?geometry=2.334%2C48.857%2C2.360%2C48.861
-2. Bati Paris hauteur : http://opendata.apur.org/datasets/hauteur-bati-2012?geometry=2.236%2C48.828%2C2.446%2C48.867
-1. Voie Paris : http://opendata.apur.org/datasets/voie?geometry=2.327%2C48.856%2C2.379%2C48.866 
-
-
-## Protocole
-### Mettre la carte en texture
+## Mettre la carte en texture
 1. Géoréférencement de la carte Turgot : (QGIS)
     1. Saisir de points de contrôle entre la carte et un fond OSM : SRC Lambert93 (ESPG:2154)
     1. Appliquer le géoréférencement avec :
@@ -24,7 +11,7 @@ https://docs.qgis.org/2.8/fr/docs/user_manual/plugins/plugins_georeferencer.html
 1. Convertir en `jpeg` : `convert myfile.tif myfile.jpeg`
 1. Appliquer le `jpeg` en texture d'un _BufferGeometry_ de THREE.js (création du bufferGeometry comme dans OpenGL avec les uv dans un tableau séparé => cf nos schémas) qui représente le support de notre carte.
 
-### Coordonées et uv
+## Coordonnées et uv
 Les coordonnées ont besoin d'avoir un traitement afin de ramner le centre de l'image au centre du repère THREE.js (0, 0, 0)
 
 1. Calcul de la matrice de translation afin de pouvoir ramener toutes nos coordonnées Lambert93 en coordonnées THREE avec le centre à (0,0,0) dans THREE
@@ -59,7 +46,7 @@ Les coordonnées ont besoin d'avoir un traitement afin de ramner le centre de l'
     ```
 
 
-### Echantillons
+## Echantillons
 2. Créer un échantillon de bâtiment : (QGIS)
     1. Saisir dans un shapefile (`ground.shp`), les arêtes au sol des bâtiments (de gauche à droite dans le sens de la carte de Turgot)
     1. Saisir dans un autre shapefile (`sky.shp`), les arêtes du haut des bâtiments (de gauche à droite dans le sens de la carte de Turgot).
@@ -78,3 +65,18 @@ Les coordonnées ont besoin d'avoir un traitement afin de ramner le centre de l'
         ( X_sky_3D, Y_sky_3D, Z_sky_3D ) = ( X_ground_2D, Y_ground_2D, D )
         ```
 ![Schéma translation](./images/translation.png)
+
+
+
+
+## Bibliographie
+
+### Tutoriel QGIS géoréférencement
+https://docs.qgis.org/2.8/fr/docs/user_manual/plugins/plugins_georeferencer.html
+
+
+### OpenData Bati
+1. OpenData APUR : http://opendata.apur.org/search 
+1. Bati Paris + année ou période construction : http://opendata.apur.org/datasets/emprise-batie-paris?geometry=2.334%2C48.857%2C2.360%2C48.861
+2. Bati Paris hauteur : http://opendata.apur.org/datasets/hauteur-bati-2012?geometry=2.236%2C48.828%2C2.446%2C48.867
+1. Voie Paris : http://opendata.apur.org/datasets/voie?geometry=2.327%2C48.856%2C2.379%2C48.866 
