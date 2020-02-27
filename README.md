@@ -35,7 +35,7 @@ The steps of the project were:
 1. Georeferencing the map with QGIS:
     * The files [turgot_map_crop2.jpeg](./images/turgot_map_crop2.jpeg) and [turgot_map_crop2.tif](./images/turgot_map_crop2.tif) refer to a georeferenced crop of the original map
 1. Creating a sample of edges with QGIS:
-    * There are two types of edges: `ground_edges` and `sky_edges` (cf schema)
+    * There are two types of edges: `ground_edges` and `sky_edges` (cf [schema](./images/edges_schema.png))
     * The json files of those geometries are in the folder [edges](./edges)
 2. Implementing the application:
     1. Loading the GeoJSON
