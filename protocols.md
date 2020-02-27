@@ -2,17 +2,17 @@
 
 ## Mettre la carte en texture
 1. Géoréférencement de la carte Turgot : (QGIS)
-    1. Saisir de points de contrôle entre la carte et un fond OSM : SRC Lambert93 (ESPG:2154)
+    1. Saisir les points de contrôle entre la carte et un fond OSM : SRC Lambert93 (ESPG:2154)
     1. Appliquer le géoréférencement avec :
         * traitement projective
         * compression LTZ
         * application de la transparence
     1. Enregistrer en `geoTIF`
 1. Convertir en `jpeg` : `convert myfile.tif myfile.jpeg`
-1. Appliquer le `jpeg` en texture d'un _BufferGeometry_ de THREE.js (création du bufferGeometry comme dans OpenGL avec les uv dans un tableau séparé => cf nos schémas) qui représente le support de notre carte.
+1. Appliquer le `jpeg` en texture d'un _BufferGeometry_ de THREE.js (création du bufferGeometry comme dans OpenGL avec les uv dans un tableau séparé => cf [schémas](./images/translation.png)) qui représente le support de notre carte.
 
 ## Coordonnées et uv
-Les coordonnées ont besoin d'avoir un traitement afin de ramner le centre de l'image au centre du repère THREE.js (0, 0, 0)
+Les coordonnées ont besoin d'avoir un traitement afin de ramener le centre de l'image au centre du repère THREE.js (0, 0, 0).
 
 1. Calcul de la matrice de translation afin de pouvoir ramener toutes nos coordonnées Lambert93 en coordonnées THREE avec le centre à (0,0,0) dans THREE
     1. Prendre la bounding box
@@ -50,9 +50,9 @@ Les coordonnées ont besoin d'avoir un traitement afin de ramner le centre de l'
 2. Créer un échantillon de bâtiment : (QGIS)
     1. Saisir dans un shapefile (`ground.shp`), les arêtes au sol des bâtiments (de gauche à droite dans le sens de la carte de Turgot)
     1. Saisir dans un autre shapefile (`sky.shp`), les arêtes du haut des bâtiments (de gauche à droite dans le sens de la carte de Turgot).
-    * **Note :** une arête _ground_ et une arête _sky_ correspondant au même bâtiment, doivent avoir le **même identifiant** dans leur shape respectif.
-3. Convertir les échantillons shapefile de bâtiment en 2 `geoJSON` (avec QGIS => Save AS).
-1. Dans THREE.js, parser les 2 `geoJSON` (`JSON.parse`) et les mettre dans des objets JS.
+    * **Note :** une arête _ground_ et une arête _sky_ correspondant au même bâtiment, doivent avoir le **même identifiant** dans leur shapefile respectif.
+3. Convertir les échantillons shapefile de bâtiments en deux `geoJSON` (avec QGIS => Save AS).
+1. Dans THREE.js, parser les deux `geoJSON` (`JSON.parse`) et les mettre dans des objets JS.
 2. Calculer les coordonnées projetées des échantillons : (ie ramener les _sky_ au-dessus des _ground_)
     1. Calculer la distance entre les _ground_ et les _sky_ pour avoir le z (altitude) à appliquer sur les _sky_. 
     1. Les (x,y) des _ground_ seront les coordonnées (x,y) pour les _ground_ et les _sky_. 
@@ -64,6 +64,7 @@ Les coordonnées ont besoin d'avoir un traitement afin de ramner le centre de l'
 
         ( X_sky_3D, Y_sky_3D, Z_sky_3D ) = ( X_ground_2D, Y_ground_2D, D )
         ```
+
 ![Schéma translation](./images/translation.png)
 
 
