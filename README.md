@@ -4,7 +4,7 @@
 ![BET3D Screen](./images/screenBET3D.png)
 
 ## Context
-This project takes place in the Web 3D lesson of the TSI course at the [ENSG](www.ensg.eu). The [IGN](www.ign.fr) wants to create a 3D view from the [Turgot map]() of Paris.
+This project takes place in the Web 3D lesson of the TSI course at the [ENSG](http://www.ensg.eu). The [IGN](http://www.ign.fr) wants to create a 3D view from the [Turgot map](https://fr.wikipedia.org/wiki/Plan_de_Turgot#/media/Fichier:Turgot_map_of_Paris_-_Norman_B._Leventhal_Map_Center.jpg) of Paris.
 
 The objectives are:
 * Lifting the buildings facades up from the Paris Turgot map
@@ -53,5 +53,9 @@ The protocols of this process are explained in the [protocols.md](./protocols.md
 
 
 ## Authors
-* Marie Stretti
-* Fanny Vignolles
+* Marie Stretti: 
+   * GitHub: @MarieStretti
+   * GitLab: @MarieStr
+* Fanny Vignolles:
+   * GitHub: @fvgls
+   * GitLab: @fvgls
