@@ -14,7 +14,6 @@ The objectives are:
 * Switching between 2D and 3D views
 
 
-
 ## Development
 
 ### Hypothesis and decisions
@@ -44,12 +43,11 @@ The steps of the project were:
     4. Implementing functionnalities:
         * a button `zenithView` to switch to the Turgot view
         * a button `turgotView` to switch to the zenithal view
-        * a radio button `mode3D` to display the 3D buildings or not
+        * a radio button `mode3D` to display or not the 3D buildings 
+        * a radio button `showEdges` to display or not the ground and sky edges
+
 
 The protocols of this process are explained in the [protocols.md](./protocols.md) file.
-
-
-
 
 
 ## Authors
