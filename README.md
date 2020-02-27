@@ -7,11 +7,11 @@
 This project takes place in the Web 3D lesson of the TSI course at the [ENSG](www.ensg.eu). The [IGN](www.ign.fr) wants to create a 3D view from the [Turgot map]() of Paris.
 
 The objectives are:
-* lifting the buildings facades up from the Paris Turgot map
-* holing the map where the buildings were drawn
-* viewing the map from the original Turgot perspective
-* viewing the map from the zenithal perspective
-* switching between 2D and 3D views
+* Lifting the buildings facades up from the Paris Turgot map
+* Holing the map where the buildings were drawn
+* Viewing the map from the original Turgot perspective
+* Viewing the map from the zenithal perspective
+* Switching between 2D and 3D views
 
 
 
