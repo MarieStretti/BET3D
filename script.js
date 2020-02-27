@@ -10,16 +10,18 @@ const GROUND_EDGES_PATH = "edges/ground_edges.json";
 
 
 /* Definition of our variables */
-var camera, scene, renderer, controls;
-var map, buildings, blackHoles, linesGround, linesSky;
-let z_offset_bh = 0; // (meters) to elevate the building buildings
+let camera, scene, renderer, controls;
+let map, buildings, blackHoles, linesGround, linesSky;
+let z_offset_bh = 0; 	// (meters) to elevate the building buildings
+let mode3D = true; 		// variable to define the default mode 2D or 3D
+let edgesVisible = false; 	// variable to define the default visibility of the edges
 
 
 /* Load Texture Map*/
-var texture = new THREE.TextureLoader().load("./images/turgot_map_crop2.jpeg");
+let texture = new THREE.TextureLoader().load("./images/turgot_map_crop2.jpeg");
 
 /* Load GeoJSON */
-var sky_edges, ground_edges;
+let sky_edges, ground_edges;
 let skyPromise = fetch(SKY_EDGES_PATH).then(result => result.json());
 let groundPromise = fetch(GROUND_EDGES_PATH).then(result => result.json());
 let promises = [skyPromise, groundPromise]
@@ -53,7 +55,7 @@ function init() {
 	camera.position.z = 700;
 	camera.up.set(0, 0, 1);
 
-	console.log("initialisation",camera)
+	console.log("initialisation", camera)
 
 	scene = new THREE.Scene();
 
@@ -82,7 +84,7 @@ function animate() {
 
 
 /* Dat Gui */
-var FizzyText = function () {
+let FizzyText = function () {
 	// Button to modify view : view from the zenith
 	this.zenithView = function () {
 		// Reset camera position
@@ -95,32 +97,39 @@ var FizzyText = function () {
 		controls.reset();
 	}
 	// Button to modify view : view in Turgot perspective
-	this.turgotView = function () {		
+	this.turgotView = function () {
 		// Modify camera position
 		camera.position.x = -490.
-		camera.position.y =  455.
-		camera.position.z =  340.
+		camera.position.y = 455.
+		camera.position.z = 340.
 		camera.updateProjectionMatrix();
 	}
 
-	// Button to pass from a 3D view with the buildings and a 2D view with only the map
-	this.mode3D = true;
+	// Button to switch from a 3D view with the buildings and a 2D view with only the map
+	this.mode3D = mode3D;
 
+	// Button to display the edges
+	this.showEdges = edgesVisible;
 };
 
 
 window.onload = function () {
-	var text = new FizzyText();
-	var gui = new dat.GUI();
+	let text = new FizzyText();
+	let gui = new dat.GUI();
 
 	gui.add(text, 'zenithView');
 	gui.add(text, 'turgotView');
 	gui.add(text, 'mode3D')
 		.onChange((value) => {
-			buildings.visible = value;
-			blackHoles.visible = value;
-			linesGround.visible = value;
-			linesSky.visible = value;
+			mode3D = value;
+			buildings.visible = mode3D;
+			blackHoles.visible = mode3D;
+		});
+	gui.add(text, 'showEdges')
+		.onChange((value) => {
+			edgesVisible = value;
+			linesGround.visible = edgesVisible;
+			linesSky.visible = edgesVisible;
 		});
 };
 
@@ -205,10 +214,10 @@ function computeCoordinates3D() {
  */
 function createMap() {
 	// create a simple square shape. We duplicate the top left and bottom right
-	var mapGeometry = new THREE.BufferGeometry();
+	let mapGeometry = new THREE.BufferGeometry();
 
 	/* Initialisation of vertices and uv with bounding box */
-	var vertices = new Float32Array([
+	let vertices = new Float32Array([
 		-HALF_WIDTH, -HALF_HEIGHT, 0.0, //-1.0, -1.0, 0.0,	
 		HALF_WIDTH, -HALF_HEIGHT, 0.0, // 1.0, -1.0, 0.0,
 		HALF_WIDTH, HALF_HEIGHT, 0.0, // 1.0,  1.0, 0.0,
@@ -218,7 +227,7 @@ function createMap() {
 		-HALF_WIDTH, -HALF_HEIGHT, 0.0 //-1.0, -1.0, 0.0
 	]);
 
-	var uv = new Float32Array([
+	let uv = new Float32Array([
 		0.0, 0.0,
 		1.0, 0.0,
 		1.0, 1.0,
@@ -264,12 +273,12 @@ function createEdges(in3D = true) {
 		let sky_edge = sky_coord[i];
 
 		// Create geometries
-		var geometryGround = new THREE.Geometry();
+		let geometryGround = new THREE.Geometry();
 		geometryGround.vertices.push(
 			new THREE.Vector3(ground_edge[0][0], ground_edge[0][1], ground_edge[0][2]),
 			new THREE.Vector3(ground_edge[1][0], ground_edge[1][1], ground_edge[1][2])
 		);
-		var geometrySky = new THREE.Geometry();
+		let geometrySky = new THREE.Geometry();
 		geometrySky.vertices.push(
 			new THREE.Vector3(sky_edge[0][0], sky_edge[0][1], sky_edge[0][2]),
 			new THREE.Vector3(sky_edge[1][0], sky_edge[1][1], sky_edge[1][2])
@@ -277,17 +286,17 @@ function createEdges(in3D = true) {
 
 
 		// Create Materials with color (with texture)
-		var materialGround = new THREE.LineBasicMaterial({
+		let materialGround = new THREE.LineBasicMaterial({
 			color: 0xff0000
 		});
-		var materialSky = new THREE.LineBasicMaterial({
+		let materialSky = new THREE.LineBasicMaterial({
 			color: 0x0000ff
 		});
 
 
 		// Draw lines
-		var lineGround = new THREE.Line(geometryGround, materialGround);
-		var lineSky = new THREE.Line(geometrySky, materialSky);
+		let lineGround = new THREE.Line(geometryGround, materialGround);
+		let lineSky = new THREE.Line(geometrySky, materialSky);
 
 		linesGround.add(lineGround);
 		linesSky.add(lineSky);
@@ -296,6 +305,9 @@ function createEdges(in3D = true) {
 	// Add to scene
 	scene.add(linesGround);
 	scene.add(linesSky);
+
+	linesGround.visible = edgesVisible;
+	linesSky.visible = edgesVisible;
 }
 
 /**
@@ -309,7 +321,7 @@ function createPolygons() {
 	let [ground_coord_2D, sky_coord_2D] = computeCoordinates2D();
 
 	// create a simple square shape. We duplicate the top left and bottom right
-	var buildingsGeometry = new THREE.BufferGeometry();
+	let buildingsGeometry = new THREE.BufferGeometry();
 
 	let vertices = fillVertices(ground_coord_3D, sky_coord_3D);
 	let uv = fillUV(ground_coord_2D, sky_coord_2D);
@@ -318,7 +330,7 @@ function createPolygons() {
 	buildingsGeometry.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
 	buildingsGeometry.setAttribute('uv', new THREE.BufferAttribute(uv, 2));
 
-	let buildingsTextureMaterial = new THREE.MeshBasicMaterial({ transparent: false, color: 0xFFFFFF, map: texture, side: THREE.FrontSide }); 
+	let buildingsTextureMaterial = new THREE.MeshBasicMaterial({ transparent: false, color: 0xFFFFFF, map: texture, side: THREE.FrontSide });
 	let buildingsColorMaterial = new THREE.MeshBasicMaterial({ transparent: false, color: 0x0, side: THREE.BackSide });
 
 
@@ -327,6 +339,8 @@ function createPolygons() {
 	buildings.add(new THREE.Mesh(buildingsGeometry, buildingsColorMaterial));
 
 	scene.add(buildings);
+
+	buildings.visible = mode3D;
 }
 
 
@@ -339,7 +353,7 @@ function createBlackHoles() {
 	let [ground_coord_2D, sky_coord_2D] = computeCoordinates2D();
 
 	// create a simple square shape. We duplicate the top left and bottom right
-	var blackHolesGeometry = new THREE.BufferGeometry();
+	let blackHolesGeometry = new THREE.BufferGeometry();
 
 	let vertices = fillVertices(ground_coord_2D, sky_coord_2D);
 
@@ -350,7 +364,10 @@ function createBlackHoles() {
 	let blackHolesMaterial = new THREE.MeshBasicMaterial({ transparent: true, color: 0x0, side: THREE.DoubleSide, depthWrite: false });
 
 	blackHoles = new THREE.Mesh(blackHolesGeometry, blackHolesMaterial);
+
 	scene.add(blackHoles);
+
+	blackHoles.visible = mode3D;
 }
 
 
@@ -368,7 +385,7 @@ function fillVertices(ground_coord, sky_coord) {
 	// *3 => 1 point = 3 coordinates (X, Y, Z)
 	let nb_vertices = (ground_coord.length + sky_coord.length) * 6 * 3
 	/* Initialisation of vertices and uv */
-	var vertices = new Float32Array(nb_vertices);
+	let vertices = new Float32Array(nb_vertices);
 
 	/* Fill array */
 	let i_vertices = 0;
@@ -406,7 +423,7 @@ function fillUV(ground_coord, sky_coord) {
 	// *3 => 1 point = 2 uv coordinates (2D)
 	let nb_uv = (ground_coord.length + sky_coord.length) * 6 * 2
 	/* Initialisation of vertices and uv */
-	var uv = new Float32Array(nb_uv);
+	let uv = new Float32Array(nb_uv);
 
 	/* Fill array */
 	let i_uv = 0;
