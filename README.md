@@ -3,6 +3,8 @@
 
 ![BET3D Screen](./images/screenBET3D.png)
 
+The project can be visualized at : [mariestretti.github.io/BET3D](https://mariestretti.github.io/BET3D).
+
 ## Context
 This project takes place in the Web 3D lesson of the TSI course at the [ENSG](http://www.ensg.eu). The [IGN](http://www.ign.fr) wants to create a 3D view from the [Turgot map](https://fr.wikipedia.org/wiki/Plan_de_Turgot#/media/Fichier:Turgot_map_of_Paris_-_Norman_B._Leventhal_Map_Center.jpg) of Paris.
 
