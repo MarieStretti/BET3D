@@ -144,7 +144,7 @@ function computeCoordinates2D() {
 	let ground_coord_2D = [];
 	let sky_coord_2D = [];
 
-	for (i = 0; i < sky_edges.features.length; i++) {
+	for (let i = 0; i < sky_edges.features.length; i++) {
 		// Get Lambert coordinates
 		let ground_edge_Lambert = ground_edges.features[i].geometry.coordinates[0];
 		let sky_edge_Lambert = sky_edges.features[i].geometry.coordinates[0];
@@ -177,7 +177,7 @@ function computeCoordinates3D() {
 	let ground_coord_3D = [];
 	let sky_coord_3D = [];
 
-	for (i = 0; i < ground_coord_2D.length; i++) {
+	for (let i = 0; i < ground_coord_2D.length; i++) {
 
 		// Calcul 2D coordinates
 		let ground_edge_2D = ground_coord_2D[i];
@@ -267,22 +267,25 @@ function createEdges(in3D = true) {
 	linesGround = new THREE.Group();
 	linesSky = new THREE.Group();
 
-	for (i = 0; i < ground_coord.length; i++) {
+	for (let i = 0; i < ground_coord.length; i++) {
 
 		let ground_edge = ground_coord[i];
 		let sky_edge = sky_coord[i];
 
 		// Create geometries
-		let geometryGround = new THREE.Geometry();
-		geometryGround.vertices.push(
+		const points = [];
+		points.push(
 			new THREE.Vector3(ground_edge[0][0], ground_edge[0][1], ground_edge[0][2]),
 			new THREE.Vector3(ground_edge[1][0], ground_edge[1][1], ground_edge[1][2])
 		);
-		let geometrySky = new THREE.Geometry();
-		geometrySky.vertices.push(
+		let geometryGround = new THREE.BufferGeometry().setFromPoints(points);
+		
+		const points2 = []
+		points2.push(
 			new THREE.Vector3(sky_edge[0][0], sky_edge[0][1], sky_edge[0][2]),
 			new THREE.Vector3(sky_edge[1][0], sky_edge[1][1], sky_edge[1][2])
 		);
+		let geometrySky = new THREE.BufferGeometry().setFromPoints(points2);
 
 
 		// Create Materials with color (with texture)
@@ -389,7 +392,7 @@ function fillVertices(ground_coord, sky_coord) {
 
 	/* Fill array */
 	let i_vertices = 0;
-	for (i = 0; i < ground_coord.length; i++) {
+	for (let i = 0; i < ground_coord.length; i++) {
 		let [ground1, ground2] = ground_coord[i];
 		let [sky1, sky2] = sky_coord[i];
 
@@ -427,7 +430,7 @@ function fillUV(ground_coord, sky_coord) {
 
 	/* Fill array */
 	let i_uv = 0;
-	for (i = 0; i < ground_coord.length; i++) {
+	for (let i = 0; i < ground_coord.length; i++) {
 		let [ground1, ground2] = ground_coord[i];
 		let [sky1, sky2] = sky_coord[i];
 
